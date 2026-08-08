@@ -12,9 +12,14 @@ blog/
 │   ├── welcome.html
 │   ├── static-blog.html
 │   └── study-notes.html
+├── images/             # 图片资源
+│   └── firefly.jpg     # 全站背景图
 └── css/
     └── style.css       # 全站样式
 ```
+
+> 背景图在 `css/style.css` 的 `body` 规则里引用（`url("../images/firefly.jpg")`）。
+> 背景完全透明显示，没有遮罩。如果某处文字在图上看不清，可以给该区域加浅色背景或文字阴影。
 
 ## 如何发布到 GitHub Pages
 
