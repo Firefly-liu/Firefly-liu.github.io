@@ -8,6 +8,8 @@
   --border: #e9e4dd;
   --radius: 12px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --firefly-green: 163, 232, 121;
+  --theme-tint: 255, 218, 231; /* 主页主题色（淡粉）：改这里，顶部遮罩、欢迎区、文章卡片一起变 */
 }
 
 * {
@@ -23,7 +25,7 @@ html {
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
-  background: var(--bg) url("../images/firefly.jpg") center / cover fixed no-repeat;
+  background: var(--bg) url("../images/137104317_p0.png") center / cover fixed no-repeat;
   color: var(--text);
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
@@ -44,6 +46,14 @@ body {
   background: rgba(250, 249, 247, 0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
+}
+
+.home .site-header {
+  background: rgba(var(--theme-tint), 0.7);
+}
+
+.article-page .site-header {
+  background: rgba(var(--firefly-green), 0.7);
 }
 
 .header-inner {
@@ -84,6 +94,12 @@ body {
   padding: 72px 0 48px;
 }
 
+.home .hero {
+  background: rgba(var(--theme-tint), 0.7);
+  border-radius: var(--radius);
+  padding: 56px 32px;
+}
+
 .hero h1 {
   font-size: 34px;
   line-height: 1.3;
@@ -119,18 +135,43 @@ body {
 }
 
 .post-card {
-  background: var(--card-bg);
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--theme-tint));
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 26px 28px;
   margin-bottom: 18px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  /* 调试用：改这三个值调整左下角图片的位置和滑动距离 */
+  --img-x: -105px;         /* 图片 X 位置：负值往左，正值往右 */
+  --img-y: 0px;         /* 图片 Y 位置：负值往上，正值往下 */
+  --slide-left: 70px;  /* 悬停后向左平移的距离：负值往左 */
 }
 
 .post-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  background: rgb(var(--firefly-green));
+}
+
+.card-img {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-height: 80px;
+  width: auto;
+  transform: translate(var(--img-x), var(--img-y));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 2s ease, opacity 2s ease;
+}
+
+.post-card:hover .card-img {
+  transform: translate(calc(var(--img-x) + var(--slide-left)), var(--img-y));
+  opacity: 1;
 }
 
 .post-card time {
@@ -174,8 +215,11 @@ body {
 /* ---------- Article page ---------- */
 
 .article {
-  padding-top: 48px;
-  padding-bottom: 72px;
+  margin-top: 48px;
+  margin-bottom: 72px;
+  padding: 36px 40px;
+  background: rgba(var(--firefly-green), 0.7);
+  border-radius: 16px;
 }
 
 .article-header {
