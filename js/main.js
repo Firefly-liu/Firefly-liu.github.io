@@ -49,4 +49,79 @@
     updateClock();
     setInterval(updateClock, 1000);
   }
+
+  // 页面切换动画
+  var transition = document.createElement("div");
+  transition.className = "page-transition";
+  document.body.appendChild(transition);
+  requestAnimationFrame(function () {
+    transition.classList.add("done");
+  });
+
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a") : null;
+    if (!a) return;
+    var href = a.getAttribute("href") || "";
+    var isExternal = href.indexOf("http") === 0
+      || href.indexOf("mailto:") === 0
+      || href.indexOf("#") === 0;
+    if (isExternal || a.target === "_blank" || a.hasAttribute("download")) return;
+    e.preventDefault();
+    transition.classList.remove("done");
+    setTimeout(function () {
+      window.location.href = href;
+    }, 420);
+  }, true);
+
+  // 阅读进度条
+  var progress = document.createElement("div");
+  progress.className = "scroll-progress";
+  document.body.appendChild(progress);
+  function updateProgress() {
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - doc.clientHeight;
+    var p = max > 0 ? (doc.scrollTop / max) * 100 : 0;
+    progress.style.width = p + "%";
+  }
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  window.addEventListener("resize", updateProgress);
+  updateProgress();
+
+  // 图片灯箱：点击文章图片放大查看
+  document.addEventListener("click", function (e) {
+    var img = e.target && e.target.closest ? e.target.closest(".article-body img") : null;
+    if (!img) return;
+    e.preventDefault();
+    var lb = document.createElement("div");
+    lb.className = "lightbox";
+    var big = document.createElement("img");
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt || "";
+    lb.appendChild(big);
+    document.body.appendChild(lb);
+    function close() {
+      lb.classList.add("out");
+      setTimeout(function () {
+        if (lb.parentNode) lb.parentNode.removeChild(lb);
+      }, 250);
+    }
+    lb.addEventListener("click", close);
+    document.addEventListener("keydown", function esc(e) {
+      if (e.key === "Escape") {
+        close();
+        document.removeEventListener("keydown", esc);
+      }
+    });
+  }, true);
+
+  // 页脚：运行天数
+  var footerText = document.querySelector(".site-footer .container p");
+  if (footerText) {
+    var start = new Date(2026, 7, 8);
+    var days = Math.floor((Date.now() - start.getTime()) / 86400000) + 1;
+    var daysSpan = document.createElement("span");
+    daysSpan.className = "footer-days";
+    daysSpan.textContent = " · 已点亮 " + days + " 天";
+    footerText.appendChild(daysSpan);
+  }
 })();
