@@ -13,6 +13,8 @@
   --shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.10);
   --firefly-green: 163, 232, 121;
   --theme-tint: 255, 218, 231; /* 主页主题色（淡粉）：改这里，顶部遮罩、欢迎区、文章卡片一起变 */
+  --night: 0.55;                  /* 背景暗化程度：0 = 不变暗，1 = 全黑 */
+  --night-content: calc(var(--night) / 2); /* 前景卡片暗化程度：自动为背景的一半 */
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
 }
@@ -34,6 +36,26 @@ body {
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
+}
+
+/* 背景暗化层：在内容下方，只压暗背景图 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 22, var(--night));
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 前景暗化层：盖住卡片和文字，程度为背景的一半 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 22, var(--night-content));
+  pointer-events: none;
+  z-index: 45;
 }
 
 ::selection {
@@ -110,7 +132,17 @@ a:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
   height: 64px;
+}
+
+.clock {
+  font-size: 13px;
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .site-title {
@@ -240,7 +272,7 @@ a:focus-visible,
 
 .post-card:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 30px rgba(163, 232, 121, 0.35);
   background: rgb(var(--firefly-green));
 }
 
@@ -254,7 +286,7 @@ a:focus-visible,
   opacity: 0;
   pointer-events: none;
   z-index: 1;
-  transition: transform 2s ease, opacity 2s ease;
+  transition: transform 1s ease, opacity 1s ease;
 }
 
 .post-card:hover .card-img {
@@ -317,6 +349,7 @@ a:focus-visible,
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+  box-shadow: 0 0 14px rgba(163, 232, 121, 0.5);
 }
 
 /* ---------- Article page ---------- */
@@ -431,6 +464,35 @@ a:focus-visible,
   color: var(--accent);
 }
 
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--accent);
+  border: 1px solid rgba(77, 138, 58, 0.4);
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(77, 138, 58, 0.25);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(77, 138, 58, 0.4);
+  background: var(--accent);
+  color: #fff;
+}
+
+.link-card {
+  border: 1px dashed rgba(77, 138, 58, 0.45);
+  border-radius: 12px;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
 /* ---------- Footer ---------- */
 
 .site-footer {
@@ -474,9 +536,88 @@ a:focus-visible,
   background: rgba(77, 138, 58, 1);
 }
 
+/* ---------- 特效：萤火虫 & 点击光点 ---------- */
+
+.fireflies {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 46; /* 在夜晚暗化层之上，保持发光 */
+}
+
+.firefly {
+  position: absolute;
+  border-radius: 50%;
+  background: #cfff9e;
+  box-shadow: 0 0 6px 2px rgba(163, 232, 121, 0.6),
+    0 0 16px 6px rgba(163, 232, 121, 0.28);
+  opacity: 0;
+  animation-name: fireflyFloat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes fireflyFloat {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.8);
+  }
+  15% {
+    opacity: 0.9;
+    transform: translate(var(--dx1), var(--dy1));
+  }
+  50% {
+    opacity: 1;
+    transform: translate(var(--dx1), var(--dy1)) scale(1.2);
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx2), var(--dy2)) scale(0.85);
+  }
+}
+
+.click-spark {
+  position: fixed;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 2px solid rgba(200, 255, 154, 0.9);
+  box-shadow: 0 0 10px rgba(163, 232, 121, 0.8),
+    inset 0 0 8px rgba(163, 232, 121, 0.6);
+  pointer-events: none;
+  z-index: 100;
+  animation: clickSpark 0.65s ease-out forwards;
+}
+
+@keyframes clickSpark {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 640px) {
+  .clock {
+    font-size: 11px;
+  }
+
+  .clock-date {
+    display: none;
+  }
+
   .hero {
     padding: 44px 20px;
   }
