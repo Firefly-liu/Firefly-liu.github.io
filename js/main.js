@@ -124,4 +124,40 @@
     daysSpan.textContent = " · 已点亮 " + days + " 天";
     footerText.appendChild(daysSpan);
   }
+
+  // 标签页图标：当前页显示 target_one，切到后台时换成 test
+  var script = document.currentScript;
+  var imgBase = script.src.substring(0, script.src.lastIndexOf("/") + 1) + "../images/";
+  var favicon = document.querySelector('link[rel="icon"]');
+  var origTitle = document.title;
+  if (favicon) {
+    document.addEventListener("visibilitychange", function () {
+      var hidden = document.hidden;
+      favicon.href = imgBase + (hidden ? "test.png" : "target_one.png");
+      document.title = hidden ? "小家会一直等你回来zzZ" : origTitle;
+    });
+  }
+
+  // 电脑端两侧装饰文字
+  var leftRail = null, rightRail = null;
+  function updateRails() {
+    var wide = window.innerWidth > 1200;
+    if (wide && !leftRail) {
+      leftRail = document.createElement("div");
+      leftRail.className = "side-rail left";
+      leftRail.textContent = "飞萤扑火，向死而生";
+      document.body.appendChild(leftRail);
+      rightRail = document.createElement("div");
+      rightRail.className = "side-rail right";
+      rightRail.textContent = "飞蛾扑火，不是渴望光芒，是要穿过火焰，点燃自己，发出最热烈的光。我的命运不会坠入黑暗，我会自己照亮身边的所有!";
+      document.body.appendChild(rightRail);
+    } else if (!wide && leftRail) {
+      leftRail.remove();
+      rightRail.remove();
+      leftRail = null;
+      rightRail = null;
+    }
+  }
+  updateRails();
+  window.addEventListener("resize", updateRails);
 })();
