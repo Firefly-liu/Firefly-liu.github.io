@@ -6,7 +6,7 @@
 
 ```text
 blog/
-├── index.html          # 首页（文章列表）
+├── index.html          # 首页（搜索首屏 + 博客/文件分享/关于三个区块）
 ├── about.html          # 关于页
 ├── files.html          # 文件分享页（EteDrop 下载 + 常用链接卡片）
 ├── intro.html          # 自我介绍页（置顶卡片点进去）
@@ -18,7 +18,11 @@ blog/
 ├── images/             # 图片资源（背景图）
 │   ├── bg-1.jpg
 │   ├── bg-2.jpg
-│   └── bg-3.jpg
+│   ├── bg-3.jpg
+│   ├── bg-4.jpg
+│   ├── desktop/        # 电脑端横屏背景（d-1.jpg ~ d-7.jpg）
+│   ├── mobile/         # 手机端竖屏背景（m-1.jpg ~ m-13.jpg）
+│   └── emote.gif       # 404 页装饰动图
 ├── css/
 │   └── style.css       # 全站样式
 └── js/
@@ -28,8 +32,12 @@ blog/
 
 ## 页面效果说明
 
-- 背景图：每次打开页面从 `js/bg.js` 的图片列表里随机选一张。
-  图片已压缩为 `images/bg-1.jpg`、`bg-2.jpg`、`bg-3.jpg`（原图备份在工作目录，不在网站里）。
+- 首页第一屏是整屏搜索页（Bing 搜索框 + B站/GitHub 等快捷方式），往下滑进入内容区；
+  内容区有"博客（默认）/文件分享/关于"三个可切换区块，导航和地址栏 `#files` / `#about` 可直达。
+- 背景图：电脑访问从 `images/desktop/` 随机选横屏图，手机访问从 `images/mobile/` 随机选竖屏图
+  （`js/bg.js` 按屏幕宽度判断，<768px 视为手机）。
+- 页面加载：整页从下方滑入（`css/style.css` 的 `pageUp` 动画）。
+- 内容区顶部的切换标签是细虚线分隔 + 低调文字样式（不再是大黑条）。
 - 主页顶部、欢迎区、文章卡片：共用 `css/style.css` 里的 `--theme-tint` 颜色（淡粉），
   改这一处三处一起变；顶部遮罩透明度固定 0.7。
 - 文章页：正文背后是萤火虫绿遮罩（透明度 70%），颜色在 `css/style.css` 的 `--firefly-green` 变量。
@@ -58,6 +66,8 @@ blog/
 - "阅读全文 →"：悬停按钮时，箭头 `→` 会换成 `images/target_two.png` 小图标。
 - 首页置顶卡片："我的自我介绍"，和文章卡片同款样式，可点击进入 `intro.html`；
   左侧是动图头像 `images/dt.gif`，右上角是低调的"置顶"字样（内容在 `index.html` 改）。
+- 首页搜索框：界面是自己的，搜索交给 Bing（提交到 `https://cn.bing.com/search`，
+  新标签页打开结果页）。想换成国际版 Bing，把 `index.html` 里的 `cn.bing.com` 改成 `www.bing.com`。
 - 电脑端（≥1200px）左右两侧有竖排装饰文字：左边"firefly_liu的小家"、
   右边"流萤为引 · 照亮前路"；大屏内容宽度自动从 760px 放宽到 860px。
 - 页脚：标语"流萤为引，照亮前路"+ 建站运行天数自动计算。
@@ -69,27 +79,49 @@ blog/
 
 ## 用工具发新文章（推荐）
 
-工具位置：`outputs/tools/NewPost.exe`（双击运行）。
+工具位置：`outputs/tools/NewPost.exe`（Windows 图形界面，双击打开）。
 
-1. 双击 `NewPost.exe`，按提示确认博客文件夹（第一次会自动记住）。
-2. 输入文章文件名（英文或拼音，如 my-post）、标题，然后选择正文字号（直接回车用默认 16.5px，或输入如 18px）。
-3. 输入正文，支持以下写法：
+1. 双击 `NewPost.exe` 打开窗口。
+2. 填写博客文件夹（第一次填好后会自动记住，也可以点"浏览…"选择）、
+   文件名（英文或拼音，如 my-post）、文章标题，选择正文字号。
+3. 在正文框里写内容，支持以下写法：
 
    - 空一行 = 分段
    - `## 小标题` = 小标题
    - `> 引用文字` = 引用
    - `- 列表项` = 列表
    - `**加粗**` / `*斜体*` = 加粗 / 斜体
-   - 图片单独一行写路径（`D:\图片\a.png`）或 `![说明](路径)`，工具会自动复制图片到 `images/` 并插入文章
-   - 最后单独输入一行 `END` 结束
+   - 图片：点"插入图片…"选择，或直接把图片文件拖进正文框，工具会自动复制图片到 `images/` 并插入文章
 
-4. 工具会自动用电脑当前日期生成 `articles/文章名.html`，并把新文章卡片插入 `index.html` 列表顶部。
-5. 把新文章、改过的 `index.html`，以及新增的图片文件一起上传到 GitHub 即可。
+4. 点"生成文章"，工具用电脑当前日期生成 `articles/文章名.html`，
+   并自动更新 `index.html`（默认还会在浏览器打开预览）。
+5. 按提示把新文章、改过的 `index.html`，以及新增的图片文件一起上传到 GitHub 即可。
 
 > 文章里的图片显示样式（圆角、最大宽度）由 `css/style.css` 的 `.article-body img` 控制；
 > 全站正文字号默认在 `.article-body`（16.5px），工具里设置的字号只对那一篇文章生效。
 
 ## 如何修改博客内容
+
+### 添加快捷方式（搜索页下方）
+
+打开 `index.html`，找到"快捷方式"那一块（`class="quick-links"`），
+复制一行并改网址和名字即可：
+
+```html
+<a class="quick-link" href="https://example.com" target="_blank" rel="noopener">示例站</a>
+```
+
+### 添加背景图（电脑/手机分开）
+
+1. 电脑横屏图放进 `images/desktop/`，手机竖屏图放进 `images/mobile/`（建议先用工具压缩成网页大小）。
+2. 打开 `js/bg.js`，在对应列表里加一行，例如：
+
+   ```js
+   var desktopImages = [ ..., "desktop/你的图片.jpg" ];
+   var mobileImages  = [ ..., "mobile/你的图片.jpg" ];
+   ```
+
+3. 上传新图片和 `js/bg.js` 即可。
 
 ### 改已有文章
 

@@ -1,4 +1,20 @@
 (function () {
+  // 页面加载：把页面内容包起来，实现整页从下往上滑入
+  var pageUp = document.createElement("div");
+  pageUp.className = "page-up";
+  var headerEl = document.querySelector(".site-header");
+  if (headerEl) {
+    // 先把顶部标题栏移出来：它不参与整页滑入，背景单独淡入（见 style.css 的 headerFadeIn）
+    document.body.removeChild(headerEl);
+  }
+  while (document.body.firstChild) {
+    pageUp.appendChild(document.body.firstChild);
+  }
+  document.body.appendChild(pageUp);
+  if (headerEl) {
+    document.body.insertBefore(headerEl, pageUp);
+  }
+
   // 回到顶部按钮
   var btn = document.createElement("button");
   btn.className = "back-top";
@@ -58,6 +74,89 @@
     transition.classList.add("done");
   });
 
+  function onIndexPage() {
+    var p = location.pathname || "";
+    return p === "" || /(^|\/)index\.html$/.test(p) || /\/$/.test(p);
+  }
+
+  function activateSection(name) {
+    var sections = document.querySelectorAll(".page-section");
+    var found = false;
+    for (var i = 0; i < sections.length; i++) {
+      var on = sections[i].id === name;
+      if (on) found = true;
+      sections[i].classList.toggle("active", on);
+    }
+    var tabs = document.querySelectorAll(".tab");
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle("active", tabs[i].getAttribute("data-section") === name);
+    }
+    return found;
+  }
+
+  function scrollToContent() {
+    var bar = document.querySelector(".tabs-bar");
+    var y = bar ? bar.getBoundingClientRect().top + window.scrollY - 60 : 0;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }
+
+  function setSectionHash(name) {
+    if (history.replaceState) {
+      try { history.replaceState(null, "", "#" + name); } catch (err) { }
+    }
+  }
+
+  // 区块切换：标签按钮 + 站内区块链接（index.html#files 等）
+  document.addEventListener("click", function (e) {
+    var tab = e.target && e.target.closest ? e.target.closest(".tab") : null;
+    if (tab) {
+      var name = tab.getAttribute("data-section");
+      if (activateSection(name)) {
+        setSectionHash(name);
+        scrollToContent();
+      }
+      return;
+    }
+    var a = e.target && e.target.closest ? e.target.closest("a") : null;
+    if (a && onIndexPage()) {
+      var href = a.getAttribute("href") || "";
+      var m = href.match(/#(blog|files|about)$/);
+      if (m) {
+        var base = href.split("#")[0];
+        if (base === "" || base === "index.html" || /(^|\/)index\.html$/.test(base)) {
+          e.preventDefault();
+          if (activateSection(m[1])) {
+            setSectionHash(m[1]);
+            scrollToContent();
+          }
+        }
+      }
+    }
+  }, true);
+
+  // 地址栏 hash 变化时同步切换（如手动改 #files 或浏览器前进后退）
+  window.addEventListener("hashchange", function () {
+    var h = (location.hash || "").replace("#", "");
+    if (h === "files" || h === "about" || h === "blog") {
+      if (activateSection(h)) scrollToContent();
+    }
+  });
+
+  // 初始区块：默认博客页；支持 #files / #about 直达
+  var hash = (location.hash || "").replace("#", "");
+  if (hash === "files" || hash === "about" || hash === "blog") {
+    activateSection(hash);
+    setTimeout(function () {
+      var bar = document.querySelector(".tabs-bar");
+      if (bar) {
+        var y = bar.getBoundingClientRect().top + window.scrollY - 60;
+        window.scrollTo({ top: y, behavior: "auto" });
+      }
+    }, 500);
+  } else {
+    activateSection("blog");
+  }
+
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest ? e.target.closest("a") : null;
     if (!a) return;
@@ -66,6 +165,11 @@
       || href.indexOf("mailto:") === 0
       || href.indexOf("#") === 0;
     if (isExternal || a.target === "_blank" || a.hasAttribute("download")) return;
+    var m = href.match(/#(blog|files|about)$/);
+    if (m && onIndexPage()) {
+      var base = href.split("#")[0];
+      if (base === "" || base === "index.html" || /(^|\/)index\.html$/.test(base)) return;
+    }
     e.preventDefault();
     transition.classList.remove("done");
     setTimeout(function () {

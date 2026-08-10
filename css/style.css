@@ -27,15 +27,30 @@
 
 html {
   scroll-behavior: smooth;
+  background: #0a0c16;
 }
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg) url("../images/bg-1.jpg") center / cover fixed no-repeat;
+  background: var(--bg) url("../images/desktop/d-1.jpg") center / cover fixed no-repeat;
   color: var(--text);
   line-height: 1.8;
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
+}
+
+/* 整页从下方滑入 */
+.page-up {
+  animation: pageUp 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+@keyframes pageUp {
+  from {
+    transform: translateY(100vh);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* 背景暗化层：在内容下方，只压暗背景图 */
@@ -120,6 +135,15 @@ a:focus-visible,
   background: rgba(250, 249, 247, 0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
+  animation: headerFadeIn 0.35s ease 0.45s backwards;
+}
+
+/* 标题栏背景在整页滑入快结束时淡入 */
+@keyframes headerFadeIn {
+  from {
+    background-color: transparent;
+    border-bottom-color: transparent;
+  }
 }
 
 .home .site-header {
@@ -217,23 +241,193 @@ a:focus-visible,
 
 /* ---------- Hero ---------- */
 
-.hero {
-  padding: 72px 0 48px;
+/* ---------- 搜索首屏 ---------- */
+
+.search-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  animation: fadeUp 0.6s ease backwards;
+  padding: 96px 24px 70px;
 }
 
-.hero h1 {
-  font-size: 38px;
-  line-height: 1.3;
-  margin-bottom: 14px;
+.search-hero-inner {
+  max-width: 720px;
+  width: 100%;
+  animation: fadeUp 0.7s ease backwards;
+}
+
+.search-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  display: block;
+  animation: logoPulse 3s ease-in-out infinite alternate;
+}
+
+.search-brand {
+  font-size: 44px;
+  line-height: 1.25;
   color: #f2ffe9;
+  margin-bottom: 10px;
   animation: textGlow 3.2s ease-in-out infinite alternate;
 }
 
-.hero p {
+.search-sub {
   color: #c6d8be;
   font-size: 17px;
+}
+
+.search-form {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  max-width: 560px;
+  margin: 32px auto 0;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 22px;
+  border: 1px solid rgba(200, 255, 154, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: rgba(77, 138, 58, 0.7);
+  box-shadow: 0 0 0 3px rgba(163, 232, 121, 0.25);
+}
+
+.search-btn {
+  padding: 0 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.search-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(163, 232, 121, 0.4);
+}
+
+/* 快捷方式 */
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.quick-link {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 255, 154, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d9e8d2;
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.quick-link:hover {
+  background: rgba(77, 138, 58, 0.75);
+  border-color: rgba(200, 255, 154, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(163, 232, 121, 0.35);
+}
+
+/* 下滑提示 */
+.scroll-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  text-align: center;
+  color: rgba(200, 255, 154, 0.7);
+  font-size: 14px;
+  letter-spacing: 2px;
+  animation: bounceDown 2s ease-in-out infinite;
+}
+
+.scroll-arrow {
+  display: block;
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+@keyframes bounceDown {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+/* ---------- 区块切换标签 ---------- */
+
+.tabs-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 9;
+  border-top: 1px dashed rgba(200, 255, 154, 0.22);
+  background: rgba(16, 22, 16, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.tabs {
+  display: flex;
+  gap: 22px;
+  padding: 10px 24px;
+}
+
+.tab {
+  padding: 4px 2px;
+  border: none;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  color: rgba(214, 232, 208, 0.5);
+  font-size: 13px;
+  letter-spacing: 1px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  color: #eaffd6;
+}
+
+.tab.active {
+  color: #eaffd6;
+  border-bottom-color: rgba(200, 255, 154, 0.7);
+}
+
+.page-section {
+  display: none;
+}
+
+.page-section.active {
+  display: block;
+  animation: fadeUp 0.45s ease backwards;
 }
 
 /* ---------- Post list ---------- */
@@ -610,6 +804,16 @@ a:focus-visible,
   background: rgba(255, 255, 255, 0.5);
 }
 
+.emote-img {
+  display: block;
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin: 0 auto 18px;
+  box-shadow: 0 0 18px rgba(163, 232, 121, 0.35);
+}
+
 /* ---------- Footer ---------- */
 
 .site-footer {
@@ -944,6 +1148,12 @@ a:focus-visible,
 
 /* ---------- Responsive ---------- */
 
+@media (max-width: 767px) {
+  body {
+    background-attachment: scroll;
+  }
+}
+
 @media (min-width: 1024px) {
   .container {
     max-width: 860px;
@@ -980,12 +1190,21 @@ a:focus-visible,
     display: none;
   }
 
-  .hero {
-    padding: 44px 20px;
+  .search-hero {
+    padding: 80px 18px 60px;
   }
 
-  .hero h1 {
-    font-size: 26px;
+  .search-brand {
+    font-size: 28px;
+  }
+
+  .search-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search-btn {
+    padding: 12px 0;
   }
 
   .post-card {
