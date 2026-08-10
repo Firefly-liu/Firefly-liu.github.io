@@ -1148,12 +1148,6 @@ a:focus-visible,
 
 /* ---------- Responsive ---------- */
 
-@media (max-width: 767px) {
-  body {
-    background-attachment: scroll;
-  }
-}
-
 @media (min-width: 1024px) {
   .container {
     max-width: 860px;
@@ -1184,10 +1178,6 @@ a:focus-visible,
 
   .clock {
     font-size: 11px;
-  }
-
-  .clock-date {
-    display: none;
   }
 
   .search-hero {

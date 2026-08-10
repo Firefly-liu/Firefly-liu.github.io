@@ -56,14 +56,11 @@
       var ap = h < 12 ? "早上" : "下午";
       var h12 = h % 12;
       if (h12 === 0) h12 = 12;
-      clock.innerHTML =
-        "现在是<span class=\"clock-date\">" +
-        (d.getMonth() + 1) + "月" + d.getDate() + "日</span>" +
-        ap + h12 + "点" + pad2(d.getMinutes()) + "分" + pad2(d.getSeconds()) + "秒";
+      clock.textContent = ap + h12 + "点" + pad2(d.getMinutes()) + "分";
     }
 
     updateClock();
-    setInterval(updateClock, 1000);
+    setInterval(updateClock, 15000);
   }
 
   // 页面切换动画
