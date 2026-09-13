@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROS 环境搭建踩坑实录 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../ros.html" class="active">智能车</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+        <h1>ROS 环境搭建踩坑实录：双系统、WSL2 与那些年重装过的系统</h1>
+        <div class="article-meta">
+          <span class="meta-tag">智能车</span>
+          <span class="meta-tag">ROS</span>
+          <span class="meta-tag">环境搭建</span>
+          <span class="meta-dot">·</span>
+          <span data-reading-time>约 8 分钟</span>
+        </div>
+      </header>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <p>环境这一关是整段备赛历程里翻车最多的部分。ROS 本身不难，难的是让它在一个稳定的系统上跑起来——前一届为此重装过系统、烧录过 TF 卡、甚至把车寄回去维修；我接手后补上了 WSL2 这条更省事的路线。下面按顺序记录，能帮你少走几周弯路。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">内容来源说明</span>
+          <p>本站的 ROS 技术记录是<strong>两届队员接力</strong>的成果。按原始备赛日志的时间线划分：<strong>2025 年 9 月 19 日之前</strong>的内容来自上一届交接的备赛日志，标注为 <span class="src-badge src-prev">前届记录</span>；<strong>之后</strong>是我自己的实践，标注为 <span class="src-badge src-mine">我的实践</span>。</p>
+          <table class="src-table">
+            <tbody>
+              <tr><th>前届记录</th><td>第四 ~ 第九节：装软件的坑、软件源证书过期、远程桌面、网络问题、Gazebo 仿真、命令小抄</td></tr>
+              <tr><th>我的实践</th><td>第一 ~ 第三节：方案选型、WSL2 的正确姿势、双系统安装</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">先说结论</span>
+          <p>如果你只是想跑 ROS1 仿真和开发，<strong>优先用 WSL2</strong>，不要碰双系统；如果你必须双系统，Ubuntu 版本选 <strong>22.04.5</strong>，别用 20.04.6。</p>
+        </div>
+
+        <h2>一、三种方案怎么选 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>先把三条路摆在一起对比，选错方向的代价是几天甚至一周。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>方案</th><th>优点</th><th>缺点</th><th>推荐度</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>双系统</td><td>能调用独显，性能最完整</td><td>安装易翻车、分区风险高、切换要重启</td><td>只在必须用 GPU 做仿真实时检测时考虑</td></tr>
+              <tr><td>WSL2</td><td>启动快、切换快、可调用独显、不碰分区</td><td>没有图形化桌面，初次上手难受；吃 C 盘空间</td><td>首选</td></tr>
+              <tr><td>虚拟机</td><td>最安全，删了不心疼</td><td>调不了独显；网络经常抽风</td><td>备用</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>二、WSL2 的正确姿势 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>WSL2 装 Ubuntu 的版本选择很关键：<strong>用 ROS1 就只能选 20.04</strong>，别听网上教程一律让你上 22.04 / 24.04。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">powershell</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 列出可安装的发行版，从里面复制带 Ubuntu-20.04 的那个名字
+wsl --list --online
+
+# 用完整名字安装
+wsl --install Ubuntu-20.04</code></pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-title">磁盘预留</span>
+          <p>WSL2 的虚拟磁盘会随使用膨胀，建议 C 盘预留 <strong>200GB 以上</strong>。装完先去确认剩余空间，别等编译到一半磁盘满了。</p>
+        </div>
+
+        <h2>三、双系统安装：20.04.6 是个坑 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>用 <code>ubuntu-20.04.6-desktop-amd64.iso</code> 安装时，安装器会因为软件源证书过期而失败。换成 <code>ubuntu-22.04.5-desktop-amd64.iso</code> 就可以正常装完。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">安装界面显示不全</span>
+          <p>按住 <kbd>Win</kbd> 再用鼠标拖动窗口，可以把被裁掉的"下一步"按钮拖出来。</p>
+        </div>
+
+        <h3>启动盘工具怎么选 <span class="src-badge src-mine">我的实践</span></h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>工具</th><th>评价</th></tr></thead>
+            <tbody>
+              <tr><td>Rufus</td><td><strong>推荐</strong>，稳定可靠</td></tr>
+              <tr><td>UltraISO</td><td>备选</td></tr>
+              <tr><td>balenaEtcher</td><td>备选</td></tr>
+              <tr><td>Win32DiskImager</td><td>不建议</td></tr>
+              <tr><td>Ventoy2Disk</td><td>不建议</td></tr>
+              <tr><td>DiskGenius</td><td>不建议</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>另外，启动盘<strong>最好放一块独立的物理硬盘</strong>，不要和系统盘共用一块盘。</p>
+
+        <h3>ROS1 装在 Ubuntu 22.04 上 <span class="src-badge src-mine">我的实践</span></h3>
+        <p>20.04 是最后一个原生支持 ROS1 的版本，所以 22.04 上直接跑"一键安装脚本"是不行的，需要参考社区给出的 ROS1 on 22.04 方案手动处理。</p>
+
+        <h2>四、装软件的正确姿势 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>这是最容易被网上教程带偏的部分。先记住四种包格式对应的命令：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># deb 包
+sudo dpkg -i 安装包名.deb
+
+# sh 脚本
+sh 安装包名.sh
+
+# whl 包（一定带国内源，否则慢到怀疑人生）
+pip install 安装包名.whl -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# zip 压缩包
+unzip 压缩包名.zip</code></pre>
+        </div>
+
+        <div class="callout danger">
+          <span class="callout-title">不要随便用「一键换源 / 一键安装」脚本</span>
+          <p>前届日志里遇到过一次一键脚本把系统软件源改得面目全非、最后把系统装废的情况。装 VS Code 这类软件请<strong>去官网下 deb 包</strong>，而且<strong>不要装最新版</strong>——前届用的是 1.83.1。</p>
+        </div>
+
+        <h3>常用体检命令 <span class="src-badge src-prev">前届记录</span></h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>目的</th><th>命令</th></tr></thead>
+            <tbody>
+              <tr><td>查看磁盘占用（千万别满）</td><td><code>df -h</code></td></tr>
+              <tr><td>查看 Python 版本</td><td><code>python --version</code></td></tr>
+              <tr><td>查看 IP（远程连接用）</td><td><code>ifconfig</code></td></tr>
+              <tr><td>查看系统架构</td><td><code>uname -m</code></td></tr>
+              <tr><td>以 root 强制删除（破坏性极高）</td><td><code>sudo rm -rf /路径</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>五、ROS1 软件源证书过期 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>遇到软件源证书过期时，有两种处理方式。第一种是应急：临时绕过签名验证。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 应急：允许更新源 / 安装时忽略认证（不是长久之计）
+sudo apt update --allow-insecure-repositories
+sudo apt install --allow-unauthenticated 包名</code></pre>
+        </div>
+
+        <p>第二种是正式修复：删掉旧密钥，重新拉取新的。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 用短 ID（后 8 位）删除旧密钥
+sudo apt-key del AB17C654
+
+# 重新获取完整密钥
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F42ED6FBAB17C654</code></pre>
+        </div>
+
+        <h2>六、远程桌面 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>车端用的是 NoMachine，装 <strong>armv8</strong> 版本的包。它的能力比想象中强，甚至支持"主机复制、车端粘贴"。</p>
+
+        <div class="callout warn">
+          <span class="callout-title">两个坑</span>
+          <p>第一，安装时<strong>不要勾</strong>输入密码下面那个复选框；第二，安装路径里<strong>不要有中文</strong>。前届因为这两点重装过好几次。</p>
+        </div>
+
+        <h2>七、网络问题 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>Ubuntu 有时会表现为"没有网络"，连网络标识都不显示。下面这组命令是有效的临时解法：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>service NetworkManager stop
+sudo rm /var/lib/NetworkManager/NetworkManager.state
+service NetworkManager start</code></pre>
+        </div>
+
+        <p>另外，虚拟机 ping 不通小车，往往也是同一类问题。这属于虚拟机的通病，不是长久修复，到了现场先 ping 一下确认网络层是否可达即可。</p>
+
+        <h3>车端首次配置顺序 <span class="src-badge src-prev">前届记录</span></h3>
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">第一步</span>
+            <div class="tl-body">
+              <h3>下载 NoMachine（armv8）并导入功能包</h3>
+              <p>先解决"看得见、点得动"的问题，后面所有操作都在远程桌面上完成。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">第二步</span>
+            <div class="tl-body">
+              <h3>编译之前先换源</h3>
+              <p>推荐用国内镜像源，否则 <code>apt</code> 和 <code>pip</code> 的等待时间会让人放弃。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">第三步</span>
+            <div class="tl-body">
+              <h3>编译，报错就查</h3>
+              <p><code>catkin_make</code> 阶段的报错基本都能靠补装依赖解决。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">第四步</span>
+            <div class="tl-body">
+              <h3>配置环境变量</h3>
+              <p>功能包的环境变量一定要放在 <code>~/.bashrc</code> 的<strong>最底部</strong>，否则会被前面的语句覆盖。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>八、Gazebo 仿真 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>Gazebo 的问题主要集中在 Python 版本与 <code>tf</code> 包的冲突上，典型报错长这样：</p>
+
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span>spawn_model 报错</span></div>
+          <div class="terminal-body"><span class="t-err">ImportError: dynamic module does not define init function (init_tf2)</span>
+<span class="t-dim">  File ".../gazebo_ros/spawn_model", line 36, in &lt;module&gt;
+    from tf.transformations import quaternion_from_euler</span></div>
+        </div>
+
+        <p>解法是让 Python3 能正常使用 ROS 的 <code>tf</code>。解决之后如果仿真建图在 RViz 里不显示，可以先查建图相关节点的话题与坐标系，而不是急着重装。</p>
+
+        <div class="callout info">
+          <span class="callout-title">被要求重装 Gazebo 的那一天</span>
+          <p>重装确实解决了问题，但要记住：<strong>仿真环境的问题，先确认是"没数据显示"还是"数据发错了坐标系"</strong>，两者的排查方向完全不同。</p>
+        </div>
+
+        <h2>九、一页命令小抄</h2>
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 实时调参
+rosrun rqt_reconfigure rqt_reconfigure
+
+# 查看话题内容
+rostopic echo /话题名
+
+# 发布一次消息
+rostopic pub /话题名 std_msgs/String "内容" -1
+
+# 键盘遥控
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py</code></pre>
+        </div>
+
+        <p>环境这一关过了，后面才是真正有意思的部分。下一篇讲语音交互的完整链路。</p>
+      </div>
+
+      <nav class="post-nav">
+        <a href="../ros.html">
+          <span class="nav-label">← 返回专题</span>
+          <span class="nav-title">智能车 / ROS 项目总览</span>
+        </a>
+        <a class="nav-next" href="ros-voice.html">
+          <span class="nav-label">下一篇 →</span>
+          <span class="nav-title">语音交互：从离线命令词到在线识别</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="../images/deco/firefly-stand.png" alt="">
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/effects.js" defer></script>
+  <script src="../js/reading.js" defer></script>
+</body>
+</html>

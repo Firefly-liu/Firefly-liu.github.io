@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能车 / ROS 项目 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="images/target_one.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="index.html">首页</a>
+        <a href="ros.html" class="active">智能车</a>
+        <a href="index.html#files">文件分享</a>
+        <a href="index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <div class="topic-hero">
+        <h1>智能车 / ROS 项目</h1>
+        <p>一台机器人小车，从环境搭建、语音交互、导航建图，到视觉模型训练与 NPU 部署。这里记录两届队员在这条线路上踩过的坑和最后跑通的方案。</p>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><b>6</b><span>篇技术记录</span></div>
+        <div class="stat"><b>4</b><span>大子系统</span></div>
+        <div class="stat"><b>YOLOv8</b><span>视觉检测</span></div>
+        <div class="stat"><b>8–13fps</b><span>OCR (NPU)</span></div>
+      </div>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <div class="callout warn">
+          <span class="callout-title">阅读前请先看：内容来源</span>
+          <p>这个专题是<strong>两届队员接力</strong>的成果，所以下面的每一篇文章都按原始备赛日志的时间线标注了来源：</p>
+          <table class="src-table">
+            <tbody>
+              <tr>
+                <th><span class="src-badge src-prev">前届记录</span></th>
+                <td>2025 年 9 月 19 日之前，来自上一届交接的备赛日志。这部分是他们踩过的坑。</td>
+              </tr>
+              <tr>
+                <th><span class="src-badge src-mine">我的实践</span></th>
+                <td>2025 年 9 月 19 日之后，是我自己接手后的记录。</td>
+              </tr>
+              <tr>
+                <th>通用速查</th>
+                <td>少部分命令与结论属于两届共用，不再单独标注。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>项目做了什么</h2>
+        <p>这是一辆基于 ROS1 的四轮机器人小车。整体任务可以拆成四件事：<strong>听懂指令 → 知道自己在哪、要去哪 → 看清环境里的东西 → 把结果播报出来</strong>。</p>
+
+        <div class="project-grid">
+          <div class="project-card">
+            <h3>语音交互</h3>
+            <p>离线命令词负责唤醒与关键词识别，后期改为在线语音识别；语音播报走离线 TTS 与音频播放两条路。</p>
+            <div class="tech-badges">
+              <span class="tech-badge">ROS Topic</span>
+              <span class="tech-badge">离线命令词</span>
+              <span class="tech-badge">TTS</span>
+            </div>
+          </div>
+          <div class="project-card">
+            <h3>导航与建图</h3>
+            <p>gmapping / hector 建图，多导航点巡线，局部规划器从 dwa 换到 teb，并用 rosbridge 打通跨设备遥控。</p>
+            <div class="tech-badges">
+              <span class="tech-badge">gmapping</span>
+              <span class="tech-badge">teb</span>
+              <span class="tech-badge">TF</span>
+              <span class="tech-badge">rosbridge</span>
+            </div>
+          </div>
+          <div class="project-card">
+            <h3>视觉检测</h3>
+            <p>自建数据集训练 YOLOv8，导出 onnx 后转成 rknn，在 RK3588 的 NPU 上做多线程推理。</p>
+            <div class="tech-badges">
+              <span class="tech-badge">YOLOv8</span>
+              <span class="tech-badge">ONNX</span>
+              <span class="tech-badge">RKNN</span>
+            </div>
+          </div>
+          <div class="project-card">
+            <h3>文字识别</h3>
+            <p>RapidOCR 做板面文字识别，检测 + 识别两阶段流水线从 CPU 搬到 NPU，帧率提升 20 倍以上。</p>
+            <div class="tech-badges">
+              <span class="tech-badge">RapidOCR</span>
+              <span class="tech-badge">PP-OCRv4</span>
+              <span class="tech-badge">多线程</span>
+            </div>
+          </div>
+        </div>
+
+        <h2>备赛时间线</h2>
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">阶段一</span>
+            <div class="tl-body">
+              <h3>环境搭建</h3>
+              <p>系统选择、ROS 安装、Gazebo 仿真调试。这一段（前届记录）翻车最多，重装过系统、烧录过 TF 卡。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">阶段二</span>
+            <div class="tl-body">
+              <h3>语音与导航</h3>
+              <p>打通语音唤醒与播报（前届），单点导航 → 多点导航，调通建图与坐标变换。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">阶段三</span>
+            <div class="tl-body">
+              <h3>视觉与模型部署</h3>
+              <p>从 YOLOv5 换到 YOLOv8，自建数据集训练（前届），跑通 pt → onnx → rknn 全链路并部署上车。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">阶段四</span>
+            <div class="tl-body">
+              <h3>系统整合与比赛</h3>
+              <p>用 sh 脚本和 launch 文件串联各子系统，处理资源冲突，最后把 OCR 搬上 NPU 完成收尾。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>文章索引</h2>
+        <div class="project-grid">
+          <a class="project-card" href="articles/ros-env.html" style="text-decoration:none;color:inherit;">
+            <h3>01 · ROS 环境搭建踩坑实录</h3>
+            <p>双系统 vs WSL2、启动盘工具对比、软件源证书过期、远程桌面与网络故障处理。</p>
+            <div class="tech-badges"><span class="tech-badge">Ubuntu</span><span class="tech-badge">WSL2</span></div>
+          </a>
+          <a class="project-card" href="articles/ros-voice.html" style="text-decoration:none;color:inherit;">
+            <h3>02 · 语音交互</h3>
+            <p>离线命令词识别、mp3 播放、离线 TTS 合成、升级到在线识别，以及常见错误码对照。</p>
+            <div class="tech-badges"><span class="tech-badge">语音</span><span class="tech-badge">TTS</span></div>
+          </a>
+          <a class="project-card" href="articles/ros-nav.html" style="text-decoration:none;color:inherit;">
+            <h3>03 · 导航与建图</h3>
+            <p>TF 坐标系打架、发车起点铁律、导航点航向角、dwa 换 teb、rosbridge 远程链路。</p>
+            <div class="tech-badges"><span class="tech-badge">导航</span><span class="tech-badge">TF</span></div>
+          </a>
+          <a class="project-card" href="articles/ros-vision.html" style="text-decoration:none;color:inherit;">
+            <h3>04 · 视觉：训练与 RKNN 部署</h3>
+            <p>数据集制作要点、训练参数含义、pt → onnx → rknn 转换、车端部署与帧率门槛。</p>
+            <div class="tech-badges"><span class="tech-badge">YOLOv8</span><span class="tech-badge">RKNN</span></div>
+          </a>
+          <a class="project-card" href="articles/ros-ocr.html" style="text-decoration:none;color:inherit;">
+            <h3>05 · 把 OCR 搬上 NPU</h3>
+            <p>RapidOCR 两阶段流水线、话题接口、资源冲突处理，以及 0.3fps → 13fps 的优化过程。</p>
+            <div class="tech-badges"><span class="tech-badge">OCR</span><span class="tech-badge">NPU</span></div>
+          </a>
+          <a class="project-card" href="articles/ros-competition.html" style="text-decoration:none;color:inherit;">
+            <h3>06 · 比赛记录与复盘</h3>
+            <p>赛制与现场规则、发车前检查清单、现场故障应对、下一届的七条改进方向。</p>
+            <div class="tech-badges"><span class="tech-badge">比赛</span><span class="tech-badge">复盘</span></div>
+          </a>
+        </div>
+
+        <h2>技术栈一览</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>层面</th><th>技术 / 工具</th></tr></thead>
+            <tbody>
+              <tr><td>系统</td><td>Ubuntu 20.04 / 22.04、WSL2、NoMachine 远程桌面</td></tr>
+              <tr><td>机器人框架</td><td>ROS1 (melodic / noetic)、catkin、RViz、Gazebo</td></tr>
+              <tr><td>建图与定位</td><td>gmapping、hector_mapping、AMCL、EKF</td></tr>
+              <tr><td>导航</td><td>move_base、dwa、teb、rqt_reconfigure</td></tr>
+              <tr><td>通信</td><td>ROS Topic、rosbridge (WebSocket)</td></tr>
+              <tr><td>视觉</td><td>YOLOv5 / YOLOv8、ultralytics (RK 适配版)、X-AnyLabeling</td></tr>
+              <tr><td>推理后端</td><td>PyTorch → ONNX → RKNN、rknn-toolkit2、RK3588 NPU</td></tr>
+              <tr><td>文字识别</td><td>RapidOCR、PP-OCRv4 (det + rec)</td></tr>
+              <tr><td>语音</td><td>离线命令词识别、在线语音识别 WebAPI、离线 TTS、pydub</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>模型与资源清单</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>文件</th><th>说明</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>yolov8.rknn</code></td><td>9 个输出头</td><td>车端目标检测</td></tr>
+              <tr><td><code>ppocrv4_det.rknn</code></td><td>NPU 文本检测</td><td>OCR 第一阶段</td></tr>
+              <tr><td><code>ppocrv4_rec.rknn</code></td><td>NPU 文本识别</td><td>OCR 第二阶段</td></tr>
+              <tr><td><code>ppocr_keys_v1.txt</code></td><td>识别字表</td><td>与 rec 模型配套</td></tr>
+              <tr><td><code>*.onnx</code></td><td>PP-OCRv4 det / rec</td><td>CPU 备用方案</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>怎么读这些文章</h2>
+        <div class="callout tip">
+          <span class="callout-title">建议顺序</span>
+          <p>按 01 → 06 读。01 是环境，是所有后续工作的前提；02~05 是四个子系统，彼此相对独立，可以按需跳读；06 是整体复盘，包含发车前的检查清单，临场前值得再看一遍。</p>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-title">关于内容</span>
+          <p>本专题只记录技术方案与踩坑经验，不包含设备密钥、账号信息与个人隐私内容。所有配置项中的 APPID / APIKey / 令牌等均已替换为占位符。</p>
+        </div>
+      </div>
+
+      <nav class="post-nav">
+        <a href="index.html">
+          <span class="nav-label">← 返回</span>
+          <span class="nav-title">首页</span>
+        </a>
+        <a class="nav-next" href="articles/ros-env.html">
+          <span class="nav-label">开始阅读 →</span>
+          <span class="nav-title">01 · ROS 环境搭建踩坑实录</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="images/deco/firefly-bubble.png" alt="">
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="js/bg.js" defer></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/effects.js" defer></script>
+  <script src="js/reading.js" defer></script>
+</body>
+</html>

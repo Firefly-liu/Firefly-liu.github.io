@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>比赛记录：流程、故障应对与下一届的改进清单 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../ros.html" class="active">智能车</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+        <h1>比赛记录：流程、故障应对与下一届的改进清单</h1>
+        <div class="article-meta">
+          <span class="meta-tag">智能车</span>
+          <span class="meta-tag">比赛</span>
+          <span class="meta-tag">复盘</span>
+          <span class="meta-dot">·</span>
+          <span data-reading-time>约 8 分钟</span>
+        </div>
+      </header>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <p>技术之外，比赛本身有一套自己的规则和节奏。这一篇把两届参赛的经验整理成可复用的清单——尤其是"发车前两小时该检查什么"这类看起来琐碎、但直接决定成败的事。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">内容来源说明</span>
+          <p>本页是<strong>两届队员接力</strong>的成果。按备赛日志的时间线：<strong>2025 年 9 月 19 日之前</strong>的内容来自上一届交接的日志（<span class="src-badge src-prev">前届记录</span>），<strong>之后</strong>是我自己的实践（<span class="src-badge src-mine">我的实践</span>）。</p>
+          <table class="src-table">
+            <tbody>
+              <tr><th>前届记录</th><td>第一节 赛制与现场规则、第三节 现场故障应对、第五节 他们留下的改进清单</td></tr>
+              <tr><th>我的实践</th><td>第二节中的建图与摆板检查、第四节 坡道与短距移动</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>一、赛制与现场规则 <span class="src-badge src-prev">前届记录</span></h2>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>项目</th><th>实际情况</th><th>应对</th></tr></thead>
+            <tbody>
+              <tr><td>正式比赛时长</td><td>30 分钟，含三次发车机会</td><td>时间并不宽裕，减少"试错式调试"</td></tr>
+              <tr><td>赛前测试</td><td>前一天仅 15 分钟</td><td>把最关键的验证项排在前面</td></tr>
+              <tr><td>识别板</td><td>比赛方不提供；30 分钟内除正式发车外不给用</td><td>所有依赖识别板的调试必须提前在别处完成</td></tr>
+              <tr><td>评奖方式</td><td>各赛区放在一起评，分数线很高</td><td>不能只求"跑完"，要追求得分项全覆盖</td></tr>
+              <tr><td>考官的取向</td><td>明确强调创意组是<strong>拼分</strong>而不是拼速度</td><td>策略上以拿满分为优先，稳定性 > 速度</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-title">换代信息</span>
+          <p>下一代比赛里旧车型会被禁用，新车型加入。新硬件的价格会直接影响是否继续投入这条路——这一点值得在赛季结束后尽早判断。</p>
+        </div>
+
+        <h2>二、发车前的检查清单 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+        <p>下面每一项都是实际踩过的坑，按优先级排列。</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">1</span>
+            <div class="tl-body">
+              <h3>地图是不是"方的"</h3>
+              <p>建完图后一定检查地图是否歪斜。歪的地图会让所有导航点整体偏移。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">2</span>
+            <div class="tl-body">
+              <h3>自己摆的板子是不是歪的</h3>
+              <p>场地里的板子是自己摆的，摆歪了识别和导航都会受影响。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">3</span>
+            <div class="tl-body">
+              <h3>发车起点与建图起点是否重合</h3>
+              <p>这条在导航篇里已经强调过，现场依然要再确认一遍。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">4</span>
+            <div class="tl-body">
+              <h3>摄像头有没有在运输中被碰移位</h3>
+              <p>这是一个高频故障：运输过程中的轻微位移会直接导致找板失败。到场地后必须先验证一次找板。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">5</span>
+            <div class="tl-body">
+              <h3>网络能不能互通</h3>
+              <p>先 <code>ping</code> 一遍各设备。虚拟机类环境如果显示网络不可达，就按网络篇里的方式处理一次。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">6</span>
+            <div class="tl-body">
+              <h3>地板上的小障碍物</h3>
+              <p>现场可能有意料之外的小障碍物，跑动路线要留出余量。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>三、现场故障与应对 <span class="src-badge src-prev">前届记录</span></h2>
+
+        <h3>故障 1：语音播报期间编号被扰动</h3>
+        <p>最后的语音播报总是把识别到的物品编号变成 0。原因是在播报这段时间里编号被刷新了。</p>
+        <div class="callout tip">
+          <span class="callout-title">解法</span>
+          <p>把"播报"和"取编号"分开：播报完成后进入一个循环，直到取到的编号里不存在 0 才跳出。理论上把两句话的先后顺序颠倒也能达到类似效果，但仍有极小概率被扰动干扰，所以采用循环等待更稳。</p>
+        </div>
+
+        <h3>故障 2：远程链路静默断连</h3>
+        <p>接收端在某台设备长时间没发消息之后，对方再发就收不到了。</p>
+        <div class="callout tip">
+          <span class="callout-title">解法</span>
+          <p>写一个 5 秒一次的循环定期取一次消息，放进多线程里执行，并补上断线重连机制。这是"保活"而不是"修 bug"。</p>
+        </div>
+
+        <h3>故障 3：位置数据出现 nan</h3>
+        <p>地图上部分区域被标记为不可达，原因是雷达数据里出现 <code>nan</code>。最终没有强行修复，而是做了多级降级（详见导航篇第七节）。</p>
+
+        <h3>故障 4：识别板位置随机</h3>
+        <p>识别板的位置是随机的，因此导航点需要选在"门口"这类有利观察位，先把车开到一个能看清板子的位置再开始识别。</p>
+
+        <h2>四、两个值得记住的技术点 <span class="src-badge src-mine">我的实践</span></h2>
+
+        <div class="callout warn">
+          <span class="callout-title">坡不要指望"跑得过去"</span>
+          <p>不要抱侥幸心理认为坡道能平稳通过。更稳的做法是：<strong>过完坡之后直接发送一次车辆位置矫正</strong>，效果等价于在 RViz 里手动摆正那个小绿箭头。用"绝对位置修正"来消化坡道带来的累计误差。</p>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">短距移动提速后不可靠</span>
+          <p>为了提高节奏把短距离移动加速之后，重复定位精度明显下降。这类移动<strong>必须配合位置处理</strong>一起使用，不能单独提速。</p>
+        </div>
+
+        <h2>五、前届留下的改进清单 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>这是前届在他们那一年结束时留下的遗憾清单，逐条列出来——他们当年希望后面的人能补上。</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">1</span>
+            <div class="tl-body">
+              <h3>用双系统启用 GPU 做仿真</h3>
+              <p>虚拟机调不到独显，仿真的视觉检测只能靠拍照方案。上双系统后可以做到仿真实时检测，调试效率会完全不同。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">2</span>
+            <div class="tl-body">
+              <h3>直接用 YOLOv8 起步</h3>
+              <p>这一届前期一直在用 YOLOv5，等二代车到手才换。建议直接以 YOLOv8 起步；更靠后的版本也可以试，群里已经有人跑起来了。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">3</span>
+            <div class="tl-body">
+              <h3>巡视 + 摇摆找板</h3>
+              <p>让车沿赛道巡视一遍，一边走一边左右摇摆着检测，扩大观察角度。这个思路是别人透露的，当时没时间实现。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">4</span>
+            <div class="tl-body">
+              <h3>把 TTS 语音合成做稳</h3>
+              <p>当时没调通，只能靠现成音频硬播。调通之后语音内容的灵活性会好很多。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">5</span>
+            <div class="tl-body">
+              <h3>告警次数决定导航点是否可行</h3>
+              <p>也就是导航篇里的"方案 C"，设计好了但没来得及实现。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">6</span>
+            <div class="tl-body">
+              <h3>自己做数据增强</h3>
+              <p>这一届的数据增强是花钱找人做的。自己动手既省钱，也能更贴合实际场景分布。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">7</span>
+            <div class="tl-body">
+              <h3>再评估一次建图方案</h3>
+              <p>除了 gmapping，还有 hector 之外的方案可以对比，各有优劣。另外赛后听到一种基于 <code>rosbag</code> 的巡线方法，值得研究。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>六、写给下一个接手的人</h2>
+        <p>训练与部署的完整步骤、每个错误码的含义、每一条"改了才有用"的配置，都已经在 `ros日志` 里按日期记下来了。接手时请按下面的顺序读：</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">第一步</span>
+            <div class="tl-body">
+              <h3>先看交接说明</h3>
+              <p>搞清楚每个文件是干什么的、哪些不用看、哪些必须看。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">第二步</span>
+            <div class="tl-body">
+              <h3>再读带注释的主代码</h3>
+              <p>代码里注释写得最全的那一份是主入口，其他都是它的变体或备用方案。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">第三步</span>
+            <div class="tl-body">
+              <h3>最后按日期翻日志</h3>
+              <p>日志是按时间线写的，遇到不认识的问题直接搜关键词（错误码、报错原文）最快。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-title">最后的建议</span>
+          <p>备赛期很长，很多两个月前搞明白的东西两个月后就忘了。所以：<strong>凡是想通了一件事，立刻写进日志</strong>，别指望自己记得住。这份日志本身，就是整段经历里最有价值的产出。</p>
+        </div>
+      </div>
+
+      <nav class="post-nav">
+        <a href="ros-ocr.html">
+          <span class="nav-label">← 上一篇</span>
+          <span class="nav-title">把 OCR 搬上 NPU：从 0.3fps 到 13fps</span>
+        </a>
+        <a class="nav-next" href="../ros.html">
+          <span class="nav-label">返回 →</span>
+          <span class="nav-title">智能车 / ROS 项目总览</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="../images/deco/firefly-stand.png" alt="">
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/effects.js" defer></script>
+  <script src="../js/reading.js" defer></script>
+</body>
+</html>

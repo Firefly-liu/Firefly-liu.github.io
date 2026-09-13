@@ -6,7 +6,9 @@
   // 想加一张，就把图片放进 images/desktop/，然后在下面数组里加一行 "desktop/你的图片名.jpg"
   var desktopImages = [
     "desktop/d-1.jpg", "desktop/d-2.jpg", "desktop/d-3.jpg", "desktop/d-4.jpg",
-    "desktop/d-5.jpg", "desktop/d-6.jpg", "desktop/d-7.jpg"
+    "desktop/d-5.jpg", "desktop/d-6.jpg", "desktop/d-7.jpg",
+    "desktop/d-8.jpg", "desktop/d-9.jpg", "desktop/d-10.jpg", "desktop/d-11.jpg",
+    "desktop/d-12.jpg", "desktop/d-13.jpg", "desktop/d-14.jpg", "desktop/d-15.jpg"
   ];
 
   // 手机端竖屏背景列表（添加方法同上，图片放 images/mobile/）
@@ -14,7 +16,8 @@
     "mobile/m-1.jpg", "mobile/m-2.jpg", "mobile/m-3.jpg", "mobile/m-4.jpg",
     "mobile/m-5.jpg", "mobile/m-6.jpg", "mobile/m-7.jpg", "mobile/m-8.jpg",
     "mobile/m-9.jpg", "mobile/m-10.jpg", "mobile/m-11.jpg", "mobile/m-12.jpg",
-    "mobile/m-13.jpg"
+    "mobile/m-13.jpg", "mobile/m-14.jpg", "mobile/m-15.jpg", "mobile/m-16.jpg",
+    "mobile/m-17.jpg", "mobile/m-18.jpg"
   ];
 
   var images = isMobile ? mobileImages : desktopImages;

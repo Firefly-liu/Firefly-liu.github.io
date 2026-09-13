@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语音交互：从离线命令词到在线识别 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../ros.html" class="active">智能车</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+        <h1>语音交互：从离线命令词到在线识别</h1>
+        <div class="article-meta">
+          <span class="meta-tag">智能车</span>
+          <span class="meta-tag">语音</span>
+          <span class="meta-tag">ROS</span>
+          <span class="meta-dot">·</span>
+          <span data-reading-time>约 7 分钟</span>
+        </div>
+      </header>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <p>语音这一块是两届队员接力做出来的，中间经历过"识别能用但不播报"、"播报能用但唤醒不了"、"全都好了但官方突然改了发车方式"三个阶段。把可复用的部分整理在这里。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">内容来源说明</span>
+          <p>本页是<strong>两届队员接力</strong>的成果。按备赛日志的时间线：<strong>2025 年 9 月 19 日之前</strong>的内容来自上一届交接的日志（<span class="src-badge src-prev">前届记录</span>），<strong>之后</strong>是我自己的实践（<span class="src-badge src-mine">我的实践</span>）。</p>
+          <table class="src-table">
+            <tbody>
+              <tr><th>前届记录</th><td>第二节 离线命令词识别、第三节 mp3 播放、第八节中的资源过期报错（11212）</td></tr>
+              <tr><th>我的实践</th><td>第四节 TTS 合成、第五节 音频播报、第六节 升级在线识别、第七节 多线程、第八节中的 10407 / 22002</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>一、整体链路</h2>
+        <p>语音系统最终分成四块，彼此通过 ROS 话题解耦：</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">输入</span>
+            <div class="tl-body">
+              <h3>唤醒 + 命令词识别</h3>
+              <p>离线命令词负责"听得见、听得出关键词"，是整个链路的触发源。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">判断</span>
+            <div class="tl-body">
+              <h3>关键词提取与业务判断</h3>
+              <p>把识别结果做正则处理，提取出业务关键词，再决定发车、前往哪个导航点。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">输出</span>
+            <div class="tl-body">
+              <h3>语音合成 / 音频播报</h3>
+              <p>两条路：离线 TTS 合成，或预先录好的 mp3 直接播放。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">控制</span>
+            <div class="tl-body">
+              <h3>与导航主程序通信</h3>
+              <p>通过话题发布控制指令，主程序订阅后驱动车辆移动。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>二、离线命令词识别 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>离线识别 SDK 的目录结构里，真正需要动的只有几个文件。最关键的一点：<strong>离线资源 <code>common.jet</code> 是有有效期的</strong>（大约三个月），过期后必须去开放平台重新下载替换。</p>
+
+        <div class="callout warn">
+          <span class="callout-title">过期时的典型报错</span>
+          <p>如果语音突然全部失效，先看日志里有没有 <code>build grammar error, errcode = 11212</code>。是这个错，基本就是资源过期，直接换 <code>common.jet</code>。</p>
+        </div>
+
+        <h3>替换与配置流程</h3>
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">步骤</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>1. 在开放平台创建应用，拿到 APPID 与 APPKey（离线命令词识别 + AIUI 平台）
+2. 下载 SDK，解压后把 bin/msc/common.jet 复制出来
+3. 用它替换 speech_command/config/AIUI/asr/common.jet
+4. 修改 Global.h 里的 APPID 与 APPKey
+5. 修改 speech_command/config/AIUI/cfg/aiui.cfg 里的路径
+6. 重新编译</code></pre>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-title">两个容易漏的点</span>
+          <p>第一，配置里除了 APPID，下面还有一个 <strong>APIKey 也要改</strong>，只改 APPID 是起不来的；第二，改完唤醒词要<strong>重新开一个终端</strong>才生效。</p>
+        </div>
+
+        <h2>三、让 mp3 能播出来 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>系统默认缺少 mp3 的解码支持，报错不一定明显，装一个包就好：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>sudo apt-get install libsox-fmt-mp3</code></pre>
+        </div>
+
+        <h2>四、离线语音合成（TTS） <span class="src-badge src-mine">我的实践</span></h2>
+        <p>车上用的是 <code>voice_system</code> 里的 TTS 节点。改动点只有登录参数和资源路径。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">cpp</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>// xcg_sub_tts.cpp
+// 1) 语音文件生成目录与播放路径（文件名可改，但两处必须一致）
+const char* fileName = "/home/ucar/Downloads/ucar_ws/src/voice_system/voice/xcg_voice.wav";
+const char* playPath = "play /home/ucar/Downloads/ucar_ws/src/voice_system/voice/xcg_voice.wav";
+
+// 2) 登录参数：把 APPID 换成你自己的
+const char* login_params = "appid = 你的APPID, work_dir = .";</code></pre>
+        </div>
+
+        <p>改完之后别忘了 TTS 自己的资源目录也要跟着换：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 语音合成资源目录
+/home/ucar/Downloads/ucar_ws/src/speech_command/config/AIUI/tts/
+
+# 编译
+catkin_make
+
+# 启动合成节点
+rosrun voice_system xcg_sub_tts
+
+# 手动测试
+rostopic pub /xcg_tts_topic std_msgs/String "测试内容"</code></pre>
+        </div>
+
+        <h3>在 Python 里调用合成</h3>
+        <p>把发布部分封装成一个函数，业务代码里只写一句话即可：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">python</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>tts_publisher = rospy.Publisher('/xcg_tts_topic', String, queue_size=10)
+
+def voice_make(command_content):
+    msg = String()
+    msg.data = command_content
+    tts_publisher.publish(msg)
+    rospy.loginfo("已发布: %s", command_content)
+
+# 使用
+voice_make("系统启动")
+voice_make("我是文字{}我是文字".format(变量))</code></pre>
+        </div>
+
+        <h2>五、用现成音频播报 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>如果不想走 TTS，也可以直接播 mp3。用 <code>pydub</code> 加载再播放，按编号或字符串找文件名：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">python</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>def play_voice(number):
+    if type(number) == str:
+        audio = AudioSegment.from_file(str(number) + ".mp3")
+    else:
+        audio = AudioSegment.from_file(str(int(number)) + ".mp3")
+    play(audio)
+
+# 使用：play_voice(1) 播放 1.mp3
+#      play_voice("系统启动") 播放 系统启动.mp3</code></pre>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-title">音频文件放在同一目录</span>
+          <p><code>AudioSegment.from_file</code> 用的是相对路径，音频文件必须和运行脚本在同一目录，或者写绝对路径。</p>
+        </div>
+
+        <h2>六、从离线升级到在线识别 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>后期官方把发车方式从"离线命令词"改成了在线识别，只能跟着改。思路是这样的：</p>
+
+        <div class="callout info">
+          <span class="callout-title">关键难点：麦克风被占用</span>
+          <p>离线命令词识别会一直占着麦克风，没法同时给在线识别用。解决办法是<strong>绕过识别，直接采集音频</strong>——把麦克风能拿到的所有音频通过话题发出去，再由一个转发节点接收并提交给在线接口，拿到回复后做正则处理提取关键词，再发回控制话题。</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">python</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># xunfei_Voice_get_online.py 里需要改的三个参数（换成你自己的）
+APPID     = "你的APPID"
+APISecret = "你的APISecret"
+APIKey    = "你的APIKey"</code></pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">在线接口的用量要盯着</span>
+          <p>WebAPI 是按服务量计的，跑比赛前务必确认剩余额度。额度用完的表现和"参数填错"很像，容易浪费时间。</p>
+        </div>
+
+        <h2>七、多线程与节点存活 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>接收语音指令的同时不能阻塞主流程，所以要用多线程。另外要分清 <code>rospy.sleep()</code> 和 <code>rospy.spin()</code>：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">python</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>import threading
+
+def 多线程函数名():
+    t = threading.Thread(target=要一直运行的函数名)
+    t.start()
+    voice_make("语音系统等待中")
+
+# rospy.sleep(1)   → 休眠，会释放 CPU 资源（可以当 delay 用）
+# rospy.spin()     → 让节点保持活跃、持续接收消息，放在进程最后</code></pre>
+        </div>
+
+        <h2>八、错误码对照 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>错误码</th><th>含义</th><th>处理方式</th></tr></thead>
+            <tbody>
+              <tr><td>11212</td><td>build grammar error</td><td>离线资源过期，重新下载替换 <code>common.jet</code></td></tr>
+              <tr><td>10407</td><td>APPID 校验失败，APPID 与 MSC 库不匹配</td><td>确认 APPID 与 SDK 属于同一个应用</td></tr>
+              <tr><td>22002</td><td>文档里查不到的错误</td><td>优先回退到上一份能跑的配置，逐项对比改动</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-title">回档是最有效的调试手段</span>
+          <p>语音模块涉及的文件多、生效条件隐晦。养成"每改通一步就存档"的习惯，出问题时用回档大法比逐行排查快得多。</p>
+        </div>
+
+        <p>语音说完，下一篇讲导航与建图——那部分的问题更偏"物理世界"，也更有意思。</p>
+      </div>
+
+      <nav class="post-nav">
+        <a href="ros-env.html">
+          <span class="nav-label">← 上一篇</span>
+          <span class="nav-title">ROS 环境搭建踩坑实录</span>
+        </a>
+        <a class="nav-next" href="ros-nav.html">
+          <span class="nav-label">下一篇 →</span>
+          <span class="nav-title">导航与建图：TF、导航点与局部规划器</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="../images/deco/firefly-stand.png" alt="">
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/effects.js" defer></script>
+  <script src="../js/reading.js" defer></script>
+</body>
+</html>

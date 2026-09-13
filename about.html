@@ -20,6 +20,7 @@
       </a>
       <nav class="site-nav">
         <a href="index.html">首页</a>
+        <a href="ros.html">智能车</a>
         <a href="index.html#files">文件分享</a>
         <a href="index.html#about" class="active">关于</a>
       </nav>
@@ -32,13 +33,37 @@
         <h1>关于我</h1>
       </header>
       <div class="article-body">
-        <p>你好呀，我是这个博客的主人。</p>
-        <p>这个网站是我用纯 HTML 和 CSS 亲手搭起来的静态博客，免费托管在 GitHub Pages 上。</p>
-        <p>这里会记录我生活中的小事情、感兴趣的东西，以及学习过程中的笔记。如果你愿意，也可以经常来逛逛，看看我又写了什么。</p>
+        <p>你好呀，我是 firefly_liu，这个博客的主人。</p>
+        <p>这个网站是我用纯 HTML 和 CSS 亲手搭起来的静态博客，免费托管在 GitHub Pages 上，没有服务器，也没有后台。</p>
+        <p>这里的绝大部分内容围绕一台机器人小车：从装系统、跑 ROS，到训练视觉模型、把它部署到板子的 NPU 上。我是个记性不太好的人，所以习惯把踩过的坑一条条写下来——既方便自己回看，也希望下一个接手的人能少走点弯路。</p>
+
+        <h2>这个站点怎么搭的</h2>
+        <ul>
+          <li>纯手写 HTML + CSS，没有框架、没有构建步骤；</li>
+          <li>文章就是 <code>articles/</code> 下的静态页面，改完上传就能更新；</li>
+          <li>背景图从 <code>images/desktop/</code> 和 <code>images/mobile/</code> 里随机取，按屏幕宽度自动切换；</li>
+          <li>萤火虫、星空、流星、点击爆光这些特效都在 <code>js/effects.js</code> 里，删掉那行 script 就能全部关掉。</li>
+        </ul>
+
+        <h2>怎么找内容</h2>
+        <p>首页可以按标签筛选文章；智能车相关的内容全部收在专题页里：</p>
+        <p><a href="ros.html">→ 智能车 / ROS 项目</a></p>
+
         <blockquote>
           <p>把日子过成自己喜欢的样子。</p>
         </blockquote>
       </div>
+
+      <nav class="post-nav">
+        <a href="index.html">
+          <span class="nav-label">← 返回</span>
+          <span class="nav-title">首页</span>
+        </a>
+        <a class="nav-next" href="intro.html">
+          <span class="nav-label">下一篇 →</span>
+          <span class="nav-title">我的自我介绍</span>
+        </a>
+      </nav>
     </article>
   </main>
 
@@ -50,5 +75,6 @@
   <script src="js/bg.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/effects.js" defer></script>
+  <script src="js/reading.js" defer></script>
 </body>
 </html>

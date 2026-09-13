@@ -20,6 +20,7 @@
       </a>
       <nav class="site-nav">
         <a href="index.html" class="active">首页</a>
+        <a href="ros.html">智能车</a>
         <a href="index.html#files">文件分享</a>
         <a href="index.html#about">关于</a>
       </nav>
@@ -36,7 +37,7 @@
           <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
         </svg>
         <h1 class="search-brand">firefly_liu的小家</h1>
-        <p class="search-sub">这里记录我的生活、想法与学习</p>
+        <p class="search-sub">这里记录我的生活、想法、还有一台机器人小车的所有折腾</p>
         <form class="search-form" action="https://cn.bing.com/search" method="get" target="_blank" rel="noopener">
           <input class="search-input" type="search" name="q" placeholder="在bing上搜点什么" required>
           <button class="search-btn" type="submit">搜索</button>
@@ -45,6 +46,7 @@
           <!-- 想加快捷方式？复制下面这一行，改网址和名字即可，例如：
           <a class="quick-link" href="https://example.com" target="_blank" rel="noopener">示例站</a>
           -->
+          <a class="quick-link" href="ros.html">智能车专题</a>
           <a class="quick-link" href="https://www.bilibili.com" target="_blank" rel="noopener">B站</a>
           <a class="quick-link" href="https://github.com/Firefly-liu" target="_blank" rel="noopener">GitHub</a>
         </div>
@@ -71,7 +73,7 @@
             <div class="pinned-text">
               <h2>我的自我介绍</h2>
               <!-- 自我介绍内容在这里改 -->
-              <p>大家好，我是 firefly_liu，这里是我在互联网上的小家。记录生活、兴趣和学习，欢迎常来逛逛～</p>
+              <p>大家好，我是 firefly_liu。这里是我在互联网上的小家，写生活、写学习，也写一台机器人小车从零到跑起来的过程。</p>
               <span class="read-more">查看完整介绍 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></span>
             </div>
           </div>
@@ -80,26 +82,94 @@
         <div class="post-list">
           <h2 class="section-title">最新文章</h2>
 
-          <article class="post-card">
+          <!-- 标签筛选：data-tag 对应文章卡片的 data-tags，多个标签用空格分隔 -->
+          <div class="tag-filter">
+            <button class="tag-btn active" type="button" data-tag="*">全部</button>
+            <button class="tag-btn" type="button" data-tag="智能车">智能车</button>
+            <button class="tag-btn" type="button" data-tag="建站">建站</button>
+            <button class="tag-btn" type="button" data-tag="笔记">笔记</button>
+            <button class="tag-btn" type="button" data-tag="随笔">随笔</button>
+          </div>
+
+          <!-- ===== 智能车专题 ===== -->
+          <article class="post-card" data-tags="智能车">
+            <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+            <h3><a href="articles/ros-competition.html">比赛记录：流程、故障应对与下一届的改进清单</a></h3>
+            <p>30 分钟三次发车机会、赛前 15 分钟测试、识别板不给用——赛制比想象中紧。附发车前检查清单与七条改进方向。</p>
+            <div class="card-tags"><span>智能车</span><span>比赛</span><span>复盘</span></div>
+            <a class="read-more" href="articles/ros-competition.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
+            <img class="card-img" src="images/left_div_img.png" alt="">
+          </article>
+
+          <article class="post-card" data-tags="智能车">
+            <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+            <h3><a href="articles/ros-ocr.html">把 OCR 搬上 NPU：从 0.3fps 到 13fps</a></h3>
+            <p>在交车前 2 小时把文字识别从 CPU 换成 NPU 推理，帧率提升 20 倍以上。记录做对了什么，以及本该早点做什么。</p>
+            <div class="card-tags"><span>智能车</span><span>OCR</span><span>性能优化</span></div>
+            <a class="read-more" href="articles/ros-ocr.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
+            <img class="card-img" src="images/left_div_img.png" alt="">
+          </article>
+
+          <article class="post-card" data-tags="智能车">
+            <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+            <h3><a href="articles/ros-vision.html">视觉：YOLOv8 训练与 RKNN 部署全流程</a></h3>
+            <p>标注数据 → 训模型 → 导出 onnx → 转 rknn → 上车部署。整条链路上版本不对就前功尽弃，这里是完整流程与踩坑。</p>
+            <div class="card-tags"><span>智能车</span><span>视觉</span><span>RKNN</span></div>
+            <a class="read-more" href="articles/ros-vision.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
+            <img class="card-img" src="images/left_div_img.png" alt="">
+          </article>
+
+          <article class="post-card" data-tags="智能车">
+            <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+            <h3><a href="articles/ros-nav.html">导航与建图：TF、导航点与局部规划器</a></h3>
+            <p>导航的“玄学”大多来自坐标系。发车起点必须与建图起点重合、两条 TF 打架、dwa 换 teb 之后的差距。</p>
+            <div class="card-tags"><span>智能车</span><span>导航</span><span>建图</span></div>
+            <a class="read-more" href="articles/ros-nav.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
+            <img class="card-img" src="images/left_div_img.png" alt="">
+          </article>
+
+          <article class="post-card" data-tags="智能车">
+            <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+            <h3><a href="articles/ros-voice.html">语音交互：从离线命令词到在线识别</a></h3>
+            <p>唤醒、识别、合成、播报四条链路怎么接，以及过期报错 11212、10407 这些错误码分别意味着什么。</p>
+            <div class="card-tags"><span>智能车</span><span>语音</span></div>
+            <a class="read-more" href="articles/ros-voice.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
+            <img class="card-img" src="images/left_div_img.png" alt="">
+          </article>
+
+          <article class="post-card" data-tags="智能车">
+            <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+            <h3><a href="articles/ros-env.html">ROS 环境搭建踩坑实录</a></h3>
+            <p>双系统还是 WSL2？装到一半系统崩了怎么办？启动盘工具怎么选？这些坑我替你踩过一遍了。</p>
+            <div class="card-tags"><span>智能车</span><span>环境搭建</span></div>
+            <a class="read-more" href="articles/ros-env.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
+            <img class="card-img" src="images/left_div_img.png" alt="">
+          </article>
+
+          <!-- ===== 其他 ===== -->
+          <article class="post-card" data-tags="随笔">
             <time datetime="2026-08-08">2026 年 8 月 8 日</time>
             <h3><a href="articles/welcome.html">欢迎来到我的博客</a></h3>
             <p>这是博客的第一篇文章。我想在这里做点什么、留下点什么，也和你打个招呼。</p>
+            <div class="card-tags"><span>随笔</span></div>
             <a class="read-more" href="articles/welcome.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
             <img class="card-img" src="images/left_div_img.png" alt="">
           </article>
 
-          <article class="post-card">
+          <article class="post-card" data-tags="建站">
             <time datetime="2026-08-08">2026 年 8 月 8 日</time>
             <h3><a href="articles/static-blog.html">为什么我选择做一个静态博客</a></h3>
             <p>没有服务器、没有后台，也能拥有一个属于自己的小站？聊聊静态博客的好处。</p>
+            <div class="card-tags"><span>建站</span></div>
             <a class="read-more" href="articles/static-blog.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
             <img class="card-img" src="images/left_div_img.png" alt="">
           </article>
 
-          <article class="post-card">
+          <article class="post-card" data-tags="笔记">
             <time datetime="2026-08-08">2026 年 8 月 8 日</time>
             <h3><a href="articles/study-notes.html">示例：我的学习笔记</a></h3>
             <p>一篇文章可以包含标题、列表、引用和代码块，这篇是格式展示的示例。</p>
+            <div class="card-tags"><span>笔记</span></div>
             <a class="read-more" href="articles/study-notes.html">阅读全文 <span class="arrow">→</span><img class="read-more-icon" src="images/target_two.png" alt=""></a>
             <img class="card-img" src="images/left_div_img.png" alt="">
           </article>
@@ -117,6 +187,12 @@
           <div class="article-body">
             <p>这里集中放一些常用的下载链接和分享链接，方便自己和朋友取用。</p>
 
+            <h2>智能车 / ROS 资料</h2>
+            <div class="link-card">
+              <p>ROS 相关的技术记录已经整理成专题，包含环境搭建、语音、导航、视觉、OCR 与比赛复盘六篇：</p>
+              <p><a href="ros.html">→ 进入「智能车 / ROS 项目」专题</a></p>
+            </div>
+
             <h2>EteDrop（文件快传工具）</h2>
             <p>国产免费的 P2P 文件快传工具，无需登录，两台设备互相传输，文件不经过服务器存储。</p>
             <p>
@@ -127,7 +203,8 @@
             <div class="link-card">
               <!-- 在这里添加你的链接，例如： -->
               <!-- <p><a href="https://example.com">链接说明</a></p> -->
-              <p>这里放你的链接，把这段提示文字替换成你自己的链接就行。</p>
+              <p>把下面这行换成你自己的链接就行：</p>
+              <p><a href="https://github.com/Firefly-liu" target="_blank" rel="noopener">GitHub 主页</a></p>
             </div>
           </div>
         </article>
@@ -142,11 +219,12 @@
             <h1>关于我</h1>
           </header>
           <div class="article-body">
-            <p>你好呀，我是这个博客的主人。</p>
-            <p>这个网站是我用纯 HTML 和 CSS 亲手搭起来的静态博客，免费托管在 GitHub Pages 上。</p>
-            <p>这里会记录我生活中的小事情、感兴趣的东西，以及学习过程中的笔记。如果你愿意，也可以经常来逛逛，看看我又写了什么。</p>
+            <p>你好呀，我是 firefly_liu，这个博客的主人。</p>
+            <p>这个网站是我用纯 HTML 和 CSS 亲手搭起来的静态博客，免费托管在 GitHub Pages 上，没有服务器，也没有后台。</p>
+            <p>这里的绝大部分内容围绕一台机器人小车：从装系统、跑 ROS，到训练视觉模型、把它部署到板子的 NPU 上。我是个记性不太好的人，所以习惯把踩过的坑一条条写下来——既方便自己回看，也希望下一个接手的人能少走点弯路。</p>
+            <p>除此之外也会写点生活里的碎碎念。如果你愿意，欢迎常来逛逛。</p>
             <blockquote>
-              <p>把日子过成自己喜欢的样子。</p>
+              <p>流萤为引，照亮前路。</p>
             </blockquote>
           </div>
         </article>
@@ -162,5 +240,6 @@
   <script src="js/bg.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/effects.js" defer></script>
+  <script src="js/reading.js" defer></script>
 </body>
 </html>

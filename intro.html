@@ -20,6 +20,7 @@
       </a>
       <nav class="site-nav">
         <a href="index.html">首页</a>
+        <a href="ros.html">智能车</a>
         <a href="index.html#files">文件分享</a>
         <a href="index.html#about">关于</a>
       </nav>
@@ -31,19 +32,62 @@
       <header class="article-header">
         <h1>我的自我介绍</h1>
       </header>
+
+      <details class="toc" id="toc"></details>
+
       <div class="article-body">
         <!-- 从这里开始写你的自我介绍 -->
         <p>大家好，我是 firefly_liu，这里是我在互联网上的小家。</p>
 
         <h2>关于我</h2>
-        <p>在这里写上关于你自己的介绍，比如你是谁、喜欢什么、平时做什么。</p>
+        <p>一个喜欢把东西拆开看看里面怎么回事的人。名字里的「流萤」是我很喜欢的一个角色，也是这个站点的配色来源——深色的夜里，一小团自己会发亮的光。</p>
+        <p>平时主要在做两件事：一是折腾机器人小车，二是把折腾的过程写下来。因为记性实在一般，凡是没写下来的东西，过两个月就跟没学过一样。</p>
+
+        <h2>我在做的事</h2>
+        <p>目前最花时间的是一台基于 ROS1 的智能车。整个项目可以拆成四块：</p>
+        <ul>
+          <li><strong>语音交互</strong>——让它听懂指令，也能开口说话；</li>
+          <li><strong>导航与建图</strong>——让它知道自己在哪里、该往哪走；</li>
+          <li><strong>视觉检测</strong>——用 YOLOv8 训练模型，再部署到板子的 NPU 上；</li>
+          <li><strong>文字识别</strong>——用 OCR 读取板面上的文字。</li>
+        </ul>
+        <p>完整的技术记录整理在专题里：<a href="ros.html">→ 智能车 / ROS 项目</a></p>
 
         <h2>兴趣爱好</h2>
-        <p>游戏、音乐、动漫……把你想分享的写在这里。</p>
+        <p>游戏、音乐、动漫，以及一些没什么用但很有意思的小工具和自动化脚本。偶尔也会写点随手拍的日常和碎碎念。</p>
+
+        <h2>表情包</h2>
+        <p>收集的一些流萤表情包，点开可以放大看：</p>
+        <div class="emote-grid">
+          <div class="emote-item"><img src="images/emote/idle.jpg" alt="待机"><span>待机</span></div>
+          <div class="emote-item"><img src="images/emote/listen.jpg" alt="聆听"><span>聆听</span></div>
+          <div class="emote-item"><img src="images/emote/talk.jpg" alt="说话"><span>说话</span></div>
+          <div class="emote-item"><img src="images/emote/think.jpg" alt="思考"><span>思考？</span></div>
+          <div class="emote-item"><img src="images/emote/good.jpg" alt="good"><span>good</span></div>
+          <div class="emote-item"><img src="images/emote/cute.jpg" alt="撒娇"><span>撒娇</span></div>
+        </div>
 
         <h2>联系我</h2>
-        <p>留下你愿意公开的联系方式，没有的话把这一整段删掉就行。</p>
+        <p>想找我的话，可以到 GitHub 上看看：<a href="https://github.com/Firefly-liu" target="_blank" rel="noopener">github.com/Firefly-liu</a></p>
+        <p>也可以直接去<a href="index.html#files">文件分享</a>页看看有没有你需要的东西。</p>
+
+        <blockquote>
+          <p>飞萤扑火，向死而生。</p>
+        </blockquote>
       </div>
+
+      <nav class="post-nav">
+        <a href="index.html">
+          <span class="nav-label">← 返回</span>
+          <span class="nav-title">首页</span>
+        </a>
+        <a class="nav-next" href="ros.html">
+          <span class="nav-label">去看看 →</span>
+          <span class="nav-title">智能车 / ROS 项目</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="images/deco/firefly-bubble.png" alt="">
     </article>
   </main>
 
@@ -55,5 +99,6 @@
   <script src="js/bg.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/effects.js" defer></script>
+  <script src="js/reading.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视觉：YOLOv8 训练与 RKNN 部署全流程 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../ros.html" class="active">智能车</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+        <h1>视觉：YOLOv8 训练与 RKNN 部署全流程</h1>
+        <div class="article-meta">
+          <span class="meta-tag">智能车</span>
+          <span class="meta-tag">视觉</span>
+          <span class="meta-tag">YOLO</span>
+          <span class="meta-tag">RKNN</span>
+          <span class="meta-dot">·</span>
+          <span data-reading-time>约 11 分钟</span>
+        </div>
+      </header>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <p>视觉这块的链路很长：<strong>标注数据 → 训模型 → 导出 onnx → 转 rknn → 上车部署</strong>，任何一环版本不对都前功尽弃。而且训练阶段的报错"位置毫无逻辑"，一小点问题能报一堆不相关的错。这篇把完整流程和踩坑都列出来。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">内容来源说明</span>
+          <p>本页是<strong>两届队员接力</strong>的成果。按备赛日志的时间线：<strong>2025 年 9 月 19 日之前</strong>的内容来自上一届交接的日志（<span class="src-badge src-prev">前届记录</span>），<strong>之后</strong>是我自己的实践（<span class="src-badge src-mine">我的实践</span>）。</p>
+          <table class="src-table">
+            <tbody>
+              <tr><th>前届记录</th><td>第三节 数据集制作要点、第四节 训练参数与内存经验、第六 / 八节中的部分转换踩坑</td></tr>
+              <tr><th>我的实践</th><td>第一节 软件与文件、第二节 环境、第五节 pt→onnx、第七节 车端部署、第九节 结论</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-title">结论先行</span>
+          <p>能用 <strong>YOLOv8 就用 YOLOv8</strong>，但必须用专门适配了 RK 芯片的 ultralytics 分支。另外：<code>pt → onnx</code> 导出的模型，<strong>结构上必须有三个分支</strong>才对，对不上就别往下走。</p>
+        </div>
+
+        <h2>一、需要准备的软件与文件 <span class="src-badge src-mine">我的实践</span></h2>
+
+        <h3>软件</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>软件</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td>Visual Studio</td><td>任意版本能用即可。<strong>不是 VS Code</strong>，两者完全不同</td></tr>
+              <tr><td>PyCharm</td><td>任意版本</td></tr>
+              <tr><td>Anaconda</td><td>版本敏感，见下方警告</td></tr>
+              <tr><td>标注工具</td><td>用 X-AnyLabeling，直接下 CPU 版 exe 即可</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout danger">
+          <span class="callout-title">Anaconda 版本警告</span>
+          <p>不要下载 <code>Anaconda3-5.3.0-Windows-x86_64</code> 这类带完整版本号的包，装不全、用不了。我用的是 <code>Anaconda3-2025.06-1-Windows-x86_64</code>。</p>
+        </div>
+
+        <h3>代码与工具仓库</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>平台</th><th>内容</th></tr></thead>
+            <tbody>
+              <tr><td>Windows</td><td>RK 适配版 <code>ultralytics_yolov8</code>（main 分支）、<code>rknn_model_zoo</code> 的 <code>yolov8/python</code>（含 convert.py）</td></tr>
+              <tr><td>Ubuntu</td><td><code>rknn_model_zoo</code> 与 <code>rknn-toolkit2</code>，<strong>两者版本必须一致</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>二、环境与虚拟环境 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+        <p>车上不能有虚拟环境（会带来各种依赖混乱），所以本机训练和车端运行要分开管理。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 自己电脑进入训练环境
+conda activate yolov8
+
+# Ubuntu 进入转换环境
+conda activate rknn
+
+# 车上进入推理环境
+conda activate rknntest
+
+# 退出环境
+conda deactivate</code></pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">Python 版本下限</span>
+          <p><strong>至少 3.9</strong>。低于这个版本，后面会莫名其妙失败。</p>
+        </div>
+
+        <h2>三、数据集：这是效果的上限 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>模型结构决定下限，数据集决定上限。这一段是前届记录里最强调的部分。</p>
+
+        <h3>拍照</h3>
+        <p>先模拟各种环境对不同类别拍照：不同曝光、不同背景、不同颜色光、不同角度。一个类别拍得越"杂"，模型泛化越好。</p>
+
+        <h3>标注</h3>
+        <ul>
+          <li>手动标注，不要偷懒用自动标注的初稿；</li>
+          <li><strong>框不要标太大</strong>，贴着目标边缘即可；</li>
+          <li>标完<strong>严格检查 txt 标签文件的类别序号</strong>，必须与训练用的类别列表顺序完全一致——这是最常见的低级错误。</li>
+        </ul>
+
+        <h3>增强</h3>
+        <p>一张图大约能增强出 8 张。前届记录里把数据集从 1700 张扩充到 6500 张之后重新训练，效果有明显提升。</p>
+
+        <div class="callout warn">
+          <span class="callout-title">分辨率混用的隐患</span>
+          <p>前届的数据集有高分辨率、低分辨率两套，直接混合训练。识别效果不错，但留下了一个隐患：<strong>会出现两个置信度 9.0 以上的识别框</strong>（一大一小），在 NMS 几乎拉满的情况下，偶尔滤掉大框、偶尔滤掉小框。</p>
+        </div>
+
+        <h2>四、训练 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+        <p>训练用 <code>train.py</code>。下面是各参数的含义与我实际用的取值：</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>参数</th><th>含义</th><th>建议值</th></tr></thead>
+            <tbody>
+              <tr><td><code>model</code></td><td>预训练模型。可填上次中断训练的 <code>last.pt</code> 路径继续训练</td><td>按需</td></tr>
+              <tr><td><code>data</code></td><td>数据集 yaml 文件</td><td>按需</td></tr>
+              <tr><td><code>epochs</code></td><td>训练轮数</td><td>数据集 ≥700 时 200 轮基本够</td></tr>
+              <tr><td><code>imgsz</code></td><td>分辨率</td><td><strong>640</strong>（车上就是 640，再高没意义）</td></tr>
+              <tr><td><code>device</code></td><td>训练硬件</td><td><code>0</code> 用 GPU，<code>cpu</code> 用 CPU</td></tr>
+              <tr><td><code>patience</code></td><td>多少轮无改善就提前结束</td><td><strong>30</strong></td></tr>
+              <tr><td><code>batch</code></td><td>每批图像数</td><td><strong>16</strong>，也可填 <code>-1</code> 自动调整</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout danger">
+          <span class="callout-title">盯住内存</span>
+          <p>我本机是 32G 内存，训练时内存爆了就<strong>直接不能训练</strong>。没有钞能力不要轻易开虚拟内存——虚拟内存有把系统搞崩的风险。</p>
+        </div>
+
+        <p>另外 <code>pt</code> 文件里 ReLU 和 SiLU 的取舍不强求，听说 ReLU 快一点，可以试。</p>
+
+        <h2>五、pt → onnx <span class="src-badge src-mine">我的实践</span></h2>
+        <p>千万不要用原版 ultralytics 导出，<strong>必须用 RK 改过的版本</strong>。导出命令：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">powershell</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>$env:PYTHONPATH = "./"
+python ./ultralytics/engine/exporter.py</code></pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">导出后必须查模型结构</span>
+          <p>打开 <a href="https://netron.app/" target="_blank" rel="noopener">netron.app</a>，把 onnx 拖进去看。<strong>有三个分支才是对的</strong>（YOLOv5 和 YOLOv8 都一样）。对不上就重新导出，实在不行重装环境。</p>
+        </div>
+
+        <h2>六、onnx → rknn <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>conda activate rknn
+cd rknn_model_zoo-2.0.0/examples/yolov8/python
+python convert.py 你的模型.onnx rk3588</code></pre>
+        </div>
+
+        <div class="callout danger">
+          <span class="callout-title">版本必须对齐</span>
+          <p><code>rknn-toolkit2</code> 与 <code>rknn_model_zoo</code> 要是<strong>同一版本</strong>。车上搭载的是 2.0.0 Beta，我就用这个版本。用 2.3.0 也能跑，但会报版本对不上的警告。<br>
+          另外，如果 onnx 旁边还有 <code>.onnx.data</code> 文件，必须放在同一路径下。</p>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-title">输出头数量对照</span>
+          <p><code>yolov8.rknn</code> 是 <strong>9 个输出头</strong>，<code>yolov5.rknn</code> 是 <strong>3 个</strong>。对不上就得从头开始，不能混用。</p>
+        </div>
+
+        <h2>七、车端部署 <span class="src-badge src-mine">我的实践</span></h2>
+        <p>把上一步得到的 rknn 权重传到车上的 <code>ucar_ws</code>，放进 <code>rknn-multi-threaded-yolov8/rknnModel</code> 目录，然后改三个地方：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">python</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># main.py 约第 105 行：指定模型路径
+modelPath = "./rknnModel/你的模型.rknn"
+
+# func.py 约第 7 行：检测类别名称，顺序要与训练一致
+CLASSES = ("类别1", "类别2", ...)
+
+# func.py：类别数组与中心点数组，长度按你要检测的数量填
+class_array  = [0.0] * 类别数量
+center_array = [[0.0, 0.0]] * 需要输出坐标的数量</code></pre>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">帧率门槛</span>
+          <p>运行 <code>main.py</code> 后确认帧率 <strong>≥ 25fps</strong> 才能实际使用。低于这个数，车在运动中的检测会跟不上。</p>
+        </div>
+
+        <div class="callout danger">
+          <span class="callout-title">不要把 YOLOv5 的代码给 YOLOv8 用</span>
+          <p>输出头数量不一样，代码不通用。这是日志里在转换阶段浪费最多时间的一个坑。</p>
+        </div>
+
+        <h2>八、踩坑总结 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">环境</span>
+            <div class="tl-body">
+              <h3>清华源没有 GPU 版 PyTorch</h3>
+              <p>一键配环境的脚本能自动匹配适配的 PyTorch，但国内镜像源里只有 CPU 版。装 CUDA 时虽然向下兼容，也建议选你能支持的最新版，<strong>Beta 版别碰</strong>。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">环境</span>
+            <div class="tl-body">
+              <h3>unicodeescape 报错</h3>
+              <p>报 <code>syntaxerror: (unicode error) 'unicodeescape' codec can't decode bytes ... truncated \uxxxx escape</code> 时，我的解法是先 <code>pip uninstall ultralytics</code>，再 <code>pip install ultralytics</code>。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">部署</span>
+            <div class="tl-body">
+              <h3>miniconda 不要装在根目录</h3>
+              <p>装的时候记得改路径，放根目录会导致硬盘不足。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">训练</span>
+            <div class="tl-body">
+              <h3>虚拟环境很占内存</h3>
+              <p>每次弄错都要新建环境，建议及时删掉不用的环境，并在 base 环境下用 <code>conda clean -p</code> 清理缓存。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">部署</span>
+            <div class="tl-body">
+              <h3>测好模型结构再去转</h3>
+              <p>转换完成后再用 netron 看一眼结构，确认输出头数量正确。有报错就问，别硬猜。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>九、一个意外的结论 <span class="src-badge src-mine">我的实践</span></h2>
+        <div class="callout tip">
+          <span class="callout-title">YOLOv8 也能识别文字</span>
+          <p>一开始我觉得 YOLOv8 识别不了文字，实际做下来<strong>完全没问题</strong>。我用手机拍照训练的数据，识别距离能到 130cm。后面有时间可以再补一些远距离样本。</p>
+        </div>
+
+        <p>但"用检测模型做文字识别"和"用专门的 OCR 做文字识别"是两条路。下一篇讲后者——把 OCR 从 CPU 搬到 NPU 上，帧率提升了一个数量级。</p>
+      </div>
+
+      <nav class="post-nav">
+        <a href="ros-nav.html">
+          <span class="nav-label">← 上一篇</span>
+          <span class="nav-title">导航与建图：TF、导航点与局部规划器</span>
+        </a>
+        <a class="nav-next" href="ros-ocr.html">
+          <span class="nav-label">下一篇 →</span>
+          <span class="nav-title">把 OCR 搬上 NPU：从 0.3fps 到 13fps</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="../images/deco/firefly-stand.png" alt="">
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/effects.js" defer></script>
+  <script src="../js/reading.js" defer></script>
+</body>
+</html>

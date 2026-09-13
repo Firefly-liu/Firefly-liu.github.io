@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>导航与建图：TF、导航点与局部规划器 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../ros.html" class="active">智能车</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-08-24">2026 年 8 月 24 日</time>
+        <h1>导航与建图：TF、导航点与局部规划器</h1>
+        <div class="article-meta">
+          <span class="meta-tag">智能车</span>
+          <span class="meta-tag">导航</span>
+          <span class="meta-tag">建图</span>
+          <span class="meta-dot">·</span>
+          <span data-reading-time>约 9 分钟</span>
+        </div>
+      </header>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <p>导航是整套系统里"玄学感"最强的部分：同一份代码，换个场地、换个发车点就不好使。事后复盘，绝大多数所谓玄学其实是<strong>坐标系</strong>问题。这一篇把踩过的坑按"现象 → 原因 → 处理"整理。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">内容来源说明</span>
+          <p>本页是<strong>两届队员接力</strong>的成果。按备赛日志的时间线：<strong>2025 年 9 月 19 日之前</strong>的内容来自上一届交接的日志（<span class="src-badge src-prev">前届记录</span>），<strong>之后</strong>是我自己的实践（<span class="src-badge src-mine">我的实践</span>）。</p>
+          <table class="src-table">
+            <tbody>
+              <tr><th>前届记录</th><td>第一节 发车点铁律、第二节坑 2（里程计与 IMU 冲突）、第五节 dwa/teb、第六节 rosbridge、第七节 降级策略、第八节 联合标定</td></tr>
+              <tr><th>我的实践</th><td>第二节坑 1 / 坑 3（TF 打架、多余分支）、第三节 建图、第四节 导航点与航向角</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>一、先立一条铁律：发车点必须与建图起点重合 <span class="src-badge src-prev">前届记录</span></h2>
+        <div class="callout danger">
+          <span class="callout-title">这条最反直觉，但代价最大</span>
+          <p>建图时的起点，必须和你实际发车时的起点<strong>重合</strong>。否则地图整体会相对车身发生偏移，导航点全部"差一步"，表现为车到不了、绕圈、卡墙角。这不是参数问题，调参救不回来。</p>
+        </div>
+
+        <p>自检方法很简单：打开 RViz，把雷达点云和地图叠在一起看，两者吻合就对了。这个过程<strong>不需要重启底盘</strong>，随时可以比对。</p>
+
+        <h2>二、TF 坐标系：三个真实踩过的坑 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+
+        <h3>坑 1：两条 TF 在「打架」 <span class="src-badge src-mine">我的实践</span></h3>
+        <p>现象是雷达坐标在乱跳，导航表现时好时坏。定位到根因在 <code>sensor_tf_server.py</code>：里面有一段发送激光雷达 TF 变换的代码，<strong>本来是应该注释掉的</strong>，但不知道为什么被启用了。启用之后 <code>x=0.11</code> 和 <code>x=-0.11</code> 两个变换同时存在，互相覆盖。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">python</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># sensor_tf_server.py
+# 发送激光雷达 TF 变换（取消注释以启用）—— 保持注释状态！
+# lidar_transform = TransformStamped()
+# lidar_transform.header.stamp = rospy.Time.now()
+# lidar_transform.header.frame_id = self.base_frame
+# lidar_transform.child_frame_id = self.lidar_frame
+# ...
+# self.tf_br.sendTransform(lidar_transform)</code></pre>
+        </div>
+
+        <h3>坑 2：里程计解算与 IMU 冲突 <span class="src-badge src-prev">前届记录</span></h3>
+        <p>建图时车的坐标系呈现一种很诡异的状态，最后确认是底盘控制 launch 里 ekf 配置的问题，把 <code>odom_use</code> 改成 <code>false</code> 就正常了。</p>
+
+        <h3>坑 3：多余的 TF 分支 <span class="src-badge src-mine">我的实践</span></h3>
+        <p>做定位时会发现"有一条奇怪的 tf 分支没有被使用"。它来自 <code>hector_mapping</code> 的 launch 文件（在 <code>/opt/ros/&lt;版本&gt;/share/hector_mapping/launch/</code>）。这个目录是只读的，需要用 <code>sudo chmod 777</code> 解除，但这属于系统包内文件——<strong>改之前先备份到桌面</strong>，我改过之后没有生效，最后还是回退了。</p>
+
+        <h2>三、建图：gmapping 与 hector <span class="src-badge src-mine">我的实践</span></h2>
+        <p>车上可用的两套建图方案各有优劣，我都装过。启动顺序如下：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code># 1. 底盘
+roslaunch ucar_controller base_driver.launch
+
+# 2. 雷达
+roslaunch ydlidar ydlidar.launch
+
+# 3a. hector 建图
+rosrun hector_mapping hector_mapping _use_tf_scan_transformation:=false
+
+# 3b. 或 gmapping 建图
+roslaunch ucar_map gmapping.launch
+
+# 4. 键盘遥控走一圈
+rosrun teleop_twist_keyboard teleop_twist_keyboard.py
+
+# 5. 保存地图
+rosrun map_server map_saver -f /home/ucar/Downloads/ucar_ws/src/地图名</code></pre>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方案</th><th>特点</th><th>适用场景</th></tr></thead>
+            <tbody>
+              <tr><td>gmapping</td><td>需要里程计，闭环效果好</td><td>常规室内建图</td></tr>
+              <tr><td>hector</td><td>不强依赖里程计，对雷达频率要求高</td><td>里程计不准时的备选</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout tip">
+          <span class="callout-title">建完图必做的两个检查</span>
+          <p>一是<strong>看地图是不是"方的"</strong>——如果墙体明显歪斜，说明建图过程中坐标系或雷达有漂移，这张图不能用；二是<strong>看自己摆的板子是不是歪的</strong>，物理摆放歪了，再准的图也救不回识别效果。</p>
+        </div>
+
+        <h2>四、导航点与航向角 <span class="src-badge src-prev">前届记录</span><span class="src-badge src-mine">我的实践</span></h2>
+        <p>导航点的输入是一个位姿，需要 <code>x, y, yaw</code> 三个量。有两种确定方式。</p>
+
+        <h3>方式一：手动示教</h3>
+        <p>把车放到目标位置，先订阅目标话题再手动发布一个导航点，终端就会把该点的横纵坐标与偏航角打印出来，直接抄进代码。</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>rostopic echo /move_base_simple/goal</code></pre>
+        </div>
+
+        <h3>方式二：角度换算</h3>
+        <p>导航接口收的是四元数，人工很容易搞错。记住两条：</p>
+        <ul>
+          <li>把获得的四元数转成欧拉角，再看 yaw；</li>
+          <li>反过来换算时，<strong>只改 z 和 w</strong>，x、y 保持 0。</li>
+        </ul>
+
+        <div class="callout warn">
+          <span class="callout-title">别手算</span>
+          <p>角度和弧度、欧拉角和四元数之间的转换非常容易出错。用在线转换工具算好再粘进去，比手算靠谱得多。</p>
+        </div>
+
+        <h3>导航点相关的报错</h3>
+        <p>发布导航点时出现过 <code>[move_base-9]</code> 错误，解决办法是把官方导航完整跑一遍，问题会消失。根因是 <code>global_costmap_params.yaml</code> 缺少一段配置，照着官方文件补上即可。</p>
+
+        <h2>五、局部规划器：dwa 与 teb 的差距 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>据前届记录，这是他们收获最大的一次更换。原本一直用 <code>dwa</code>，导航有极小概率卡墙角；换成 <code>teb</code> 之后立刻能感觉到两者差距。</p>
+
+        <div class="callout info">
+          <span class="callout-title">一个侧面印证</span>
+          <p>群里有人提到，上一代车受限于算力，用的检测模型只有一两帧的帧率。这说明<strong>硬件算力会直接限制算法选择</strong>——换规划器之前，先确认车端能不能跑得动。</p>
+        </div>
+
+        <h3>实时调参工具</h3>
+        <p>导航参数不要靠"改文件 → 重启 → 观察"的循环，用可视化工具直接拖：</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="code-lang">bash</span><button class="code-copy" type="button">复制</button></div>
+          <pre><code>rosrun rqt_reconfigure rqt_reconfigure</code></pre>
+        </div>
+
+        <h2>六、远程遥控：rosbridge <span class="src-badge src-prev">前届记录</span></h2>
+        <p>需要从电脑、虚拟机、WSL 等不同设备控制小车或接收话题时，用 <code>rosbridge</code> 打通。</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">步骤 1</span>
+            <div class="tl-body">
+              <h3>两边都安装 rosbridge 功能包</h3>
+              <p>其实下一边也能用，但两边都有会更省事、更灵活。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">步骤 2</span>
+            <div class="tl-body">
+              <h3>用 rosbridge_websocket.launch 启动</h3>
+              <p>功能包目录下有三个 launch 文件，用 websocket 那个。默认端口 9090。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">步骤 3</span>
+            <div class="tl-body">
+              <h3>谁接收，谁跑脚本</h3>
+              <p>接收端运行 Python 脚本，关键参数是<strong>对方的 IP</strong> 和端口。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">注意</span>
+            <div class="tl-body">
+              <h3>两台设备都开 rosbridge 时</h3>
+              <p>端口会冲突，需要把其中一台的端口改掉（在 <code>/opt/ros/&lt;版本&gt;/share</code> 下对应功能包的 launch 文件里改）。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <span class="callout-title">远程链路的两个典型故障</span>
+          <p><strong>① 静默断连：</strong>接收端在某台设备长时间没有消息后，对方再发就收不到了。处理方式是写一个 5 秒一次的循环定期取一次消息，并放进多线程，同时补上断线重连机制。<br>
+          <strong>② 虚拟机拿不到小车 IP 下的信息：</strong>用 NetworkManager 的重启方式临时解决，但这是虚拟机的通病，不是根修——到现场先 <code>ping</code> 一下确认网络层可达。</p>
+        </div>
+
+        <h2>七、当定位数据不可用时的降级策略 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>地图上有些区域会被标记为"概率无法到达"，原因是雷达数据出现 <code>nan</code>（非数值）。这个问题在前届记录里折磨了很久，最后没有强行修复，而是设计了多级降级：</p>
+
+        <div class="timeline">
+          <div class="tl-item">
+            <span class="tl-date">方案 A</span>
+            <div class="tl-body">
+              <h3>调雷达参数</h3>
+              <p>怀疑是检测范围过小导致 <code>nan</code>；用 <code>rostopic echo</code> 观察实际数据时又看起来正常。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">方案 B</span>
+            <div class="tl-body">
+              <h3>怀疑是算角度时分母为 0</h3>
+              <p>雷达数据转角度时，分母存在为 0 的可能。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">方案 C（最终采用）</span>
+            <div class="tl-body">
+              <h3>超时跳过 + 标志位</h3>
+              <p>用多线程监听告警消息，一定时间内告警数超过阈值就切到下一个目标点，并设全局标志位记录当前目标点。旋转找板前套一个循环：目标点有效就执行并跳出，无效就去下一个点。</p>
+            </div>
+          </div>
+          <div class="tl-item">
+            <span class="tl-date">最终兜底</span>
+            <div class="tl-body">
+              <h3>放弃标定，改用 PID 逼近</h3>
+              <p>所有导航点都不可用时，清空当前目标标志位重新找板，并把雷达相机联合标定切换为 PID 逼近。</p>
+            </div>
+          </div>
+        </div>
+
+        <h2>八、相机与雷达的联合标定 <span class="src-badge src-prev">前届记录</span></h2>
+        <p>标定直接决定"看到的板子在雷达坐标系里的哪个位置"。记录几条经验证的事实：</p>
+        <ul>
+          <li>车坐标系与地图坐标系之间的 <code>tf</code> 没有问题，说明 <code>yaw</code> 是准的；</li>
+          <li>中心点坐标误差幅度小于 1，可以排除模型本身的问题；</li>
+          <li><code>anglex</code> 在 4 左右时能正常运行，在 -35 时失败；此时雷达列表索引仍在合法范围内，没有明显证据表明它是关键——因此把排查重点放在<strong>路径规划参数</strong>上更有效率。</li>
+        </ul>
+
+        <div class="callout tip">
+          <span class="callout-title">偏移量给反了这件事</span>
+          <p>如果车总是往反方向偏，先把 x、y 轴上的偏移量打印出来确认正负号——前届日志里有一次就是符号给反了，白调了一整天。</p>
+        </div>
+
+        <h2>九、调导航的优先级建议</h2>
+        <ol>
+          <li>确认发车点与建图起点重合（最重要，先做）</li>
+          <li>确认没有多余的 TF 分支在打架</li>
+          <li>确认 <code>ekf</code> 的 <code>odom_use</code> 等里程计配置正确</li>
+          <li>换局部规划器（dwa → teb）看整体表现</li>
+          <li>最后才是逐个调参数</li>
+        </ol>
+
+        <p>下一篇进入视觉部分：从 YOLOv5 换到 YOLOv8，以及 pt → onnx → rknn 的完整转换链路。</p>
+      </div>
+
+      <nav class="post-nav">
+        <a href="ros-voice.html">
+          <span class="nav-label">← 上一篇</span>
+          <span class="nav-title">语音交互：从离线命令词到在线识别</span>
+        </a>
+        <a class="nav-next" href="ros-vision.html">
+          <span class="nav-label">下一篇 →</span>
+          <span class="nav-title">视觉：YOLOv8 训练与 RKNN 部署</span>
+        </a>
+      </nav>
+
+      <img class="article-deco" src="../images/deco/firefly-stand.png" alt="">
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/effects.js" defer></script>
+  <script src="../js/reading.js" defer></script>
+</body>
+</html>
