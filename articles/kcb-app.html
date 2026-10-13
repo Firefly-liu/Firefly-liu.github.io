@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课程表 App：把教务课表搬进手机，全程不联网 - firefly_liu的小家</title>
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css?v=1">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../ros.html">智能车</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-10-13">2026 年 10 月 13 日</time>
+        <h1>课程表 App：把教务课表搬进手机，全程不联网</h1>
+        <div class="article-meta">
+          <span class="meta-tag">安卓</span>
+          <span class="meta-tag">作品</span>
+          <span class="meta-tag">Kotlin</span>
+          <span class="meta-dot">·</span>
+          <span data-reading-time>约 7 分钟</span>
+        </div>
+      </header>
+
+      <details class="toc" id="toc"></details>
+
+      <div class="article-body">
+        <p>起因很朴素：我需要一个能用的课程表 App。</p>
+        <p>试过几个现成的，各有各的毛病——有的开屏广告关不掉，有的每次看课表都要先联网、登录、转圈等半天，还有的干脆把一整学期的课表传到别人服务器上。而我真正需要的功能其实很少：<strong>打开就能看见今天上什么课，不联网也能用</strong>。</p>
+        <p>于是就有了这个课程表 App：安卓端、纯本地、没有广告，也不打算上架应用商店，只给自己学校和身边几个同学用。</p>
+
+        <div class="callout tip">
+          <span class="callout-title">一句话概括</span>
+          <p>从学校教务系统把课表抓下来存进手机本地数据库，之后所有功能——看课、调休、加课、桌面小组件——<strong>全部离线完成</strong>，除了第一次登录教务，它一次网都不需要上。</p>
+        </div>
+
+        <h2>它现在能做什么</h2>
+        <ul>
+          <li>从教务系统导入课表，再手动设一次开学日期，之后按日期显示每天上什么课</li>
+          <li>本周的课高亮显示，非本周的降低透明度</li>
+          <li>长按日期或某节课，直接调休、调课、放假、补课</li>
+          <li>手动加课（临时补一节、临时换教室）</li>
+          <li>自定义背景</li>
+          <li>导入导出备份，换手机不用重新配</li>
+          <li>桌面小组件：显示今天 / 明天 / 后天，点箭头就能切换</li>
+        </ul>
+
+        <h2>关键设计一：不碰你的账号密码</h2>
+        <p>抓课表这件事，最省事的做法是「让 App 存下你的账号密码，后台自动登录去抓」。我没走这条路——<strong>把学校账号密码交给一个自己写的小 App，风险和收益完全不成比例</strong>。</p>
+        <p>改成这样：App 内置一个 WebView，你自己登录、自己点到课表页，然后点一下「开始解析」。App 不自动导航、不保存密码、不在后台悄悄重试。</p>
+        <p>解析逻辑单独放在一个 JS 适配脚本里，通过 Bridge 把结果回传给 App。这样做的好处是：<strong>换一所学校，只需要改这一个脚本文件</strong>，App 本体一行都不用动。脚本万一挂了，也只弹一个提示，不会影响 App 其他功能。</p>
+
+        <h2>关键设计二：调休模型</h2>
+        <p>课程表最容易做乱的地方是「调休」。</p>
+        <p>常见的坑是把调休实现成「把 A 挪到 B」，然后 B 又挪到 C，一路链式递归下去，最后谁也不知道某天的课到底是从哪儿来的。撤销一次调休，更是无从下手。</p>
+        <p>最后用的是 <strong>A + B 混合模型</strong>：A 管日期级（整天放假 / 整天补课），B 管单节课级（增、删、移动）。两者优先级唯一确定，越具体的越优先。所有覆盖<strong>只追加、永不改写原始课程数据</strong>，渲染的时候再合成，撤销就等于删掉那条记录。</p>
+        <p>还有一个细节：复制课程时只复制原始课程，不带它已有的覆盖——否则一次复制会引发一串连锁反应，越滚越大。</p>
+
+        <h2>关键设计三：小组件重写了一次</h2>
+        <p>第一版桌面小组件用的是 Glance。功能都正常，但<strong>点箭头有明显的卡顿</strong>。</p>
+        <p>用的人（就是我自己）受不了，于是整个换成传统的 <code>AppWidgetProvider</code> + <code>RemoteViews</code>：布局固定成 5 行，刷新时只改文字内容和可见性，不重建整棵视图树。</p>
+        <p>顺手把箭头触摸区做到了 <strong>52dp</strong>——原来只有一个文字的宽度，确实不好按。</p>
+        <p>重写之后，APK 体积从 9.17 MB 降到了 7.76 MB，快是快了不少。</p>
+
+        <h2>踩过的坑</h2>
+        <p><strong>中文路径。</strong>安卓工具链对中文路径的支持一言难尽，最后给 JDK、SDK、Gradle 和项目目录都建了一套英文 Junction 门牌（比如 <code>E:\android-sdk</code>），绕开这个问题才顺起来。</p>
+        <p><strong>解析教务页面。</strong>课表表格用 <code>rowspan</code> 把同一节次跨了多行，后面那几行里根本没有节次单元格。所以不能按单元格下标去取，得<strong>逐行累积当前的节次</strong>才行。</p>
+        <p><strong>颜色即状态。</strong>页面上用颜色区分「已选上」和「待筛选」，而「待筛选」的课本来就不该显示——只能靠颜色判断之后直接忽略掉。</p>
+        <p><strong>日期和作息时间是手填的。</strong>因为教务页面上压根就没有开学日期和节次时间表，只能自己设一次，设置页里随时能改。</p>
+
+        <h2>开源</h2>
+        <p>源码放在 GitHub：<a href="https://github.com/Firefly-liu/firefly_liu.kcb" target="_blank" rel="noopener">Firefly-liu/firefly_liu.kcb</a></p>
+        <p>开源前做了一件事：<strong>把学校相关的信息全部拿掉</strong>，只留通用的适配脚本骨架。学校名、内网地址这类东西只存在于本地，不会跟着代码走。</p>
+
+        <h2>写在最后</h2>
+        <p>这个 App 没有什么宏大的目标。它只解决了「我想打开手机就知道今天上什么课」这一个问题——只不过这一次，是用自己的手解决的。</p>
+        <p>顺带说一句，它是 <strong>24 电协小刘 与 大肥鱼（DeepSeek）</strong>一起做的。我负责提需求和挑毛病，它负责写代码和解释为什么代码会崩。</p>
+        <blockquote>
+          <p>流萤为引，照亮前路。</p>
+        </blockquote>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js?v=1" defer></script>
+  <script src="../js/main.js?v=1" defer></script>
+  <script src="../js/effects.js?v=1" defer></script>
+  <script src="../js/reading.js?v=1" defer></script>
+</body>
+</html>
