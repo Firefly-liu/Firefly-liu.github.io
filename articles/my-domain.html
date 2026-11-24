@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>给自己的站买了个门牌 - firefly_liu的小家</title>
+  <meta name="description" content="76 块钱，一天两毛三。记录 2026 年 11 月 24 日这一天：从问「.vip 和 .com 有什么区别」，到 fireflyliu.com 真正能打开。">
+  <link rel="canonical" href="https://fireflyliu.com/articles/my-domain.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="firefly_liu的小家">
+  <meta property="og:title" content="给自己的站买了个门牌 - firefly_liu的小家">
+  <meta property="og:description" content="76 块钱，一天两毛三。记录 2026 年 11 月 24 日这一天：从问「.vip 和 .com 有什么区别」，到 fireflyliu.com 真正能打开。">
+  <meta property="og:url" content="https://fireflyliu.com/articles/my-domain.html">
+  <meta property="og:image" content="https://fireflyliu.com/images/bg-1.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="../images/target_one.png">
+  <link rel="stylesheet" href="../css/style.css?v=1">
+</head>
+<body class="article-page">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../index.html" class="site-title">
+        <svg class="firefly-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <ellipse cx="20" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(-18 20 27)"/>
+          <ellipse cx="44" cy="27" rx="13" ry="7" fill="#a8ffb8" opacity="0.45" transform="rotate(18 44 27)"/>
+          <circle cx="32" cy="37" r="9" fill="#cfff9e"/>
+        </svg>
+        firefly_liu的小家
+      </a>
+      <nav class="site-nav">
+        <a href="../index.html">首页</a>
+        <a href="../index.html#files">文件分享</a>
+        <a href="../index.html#about">关于</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container article">
+    <article>
+      <header class="article-header">
+        <time datetime="2026-11-24">2026 年 11 月 24 日</time>
+        <h1>给自己的站买了个门牌</h1>
+      </header>
+      <div class="article-body">
+
+        <p>今天早上，我问了一个挺蠢的问题：<strong>.vip 和 .com 到底有什么区别。</strong></p>
+
+        <p>土到不该问，但我是真的不知道。查下去才发现，这一行的水比我想的深。</p>
+
+        <h2>首年是获客成本，续费才是生意</h2>
+
+        <p>看了一圈报价，规律很快就出来了：<strong>首年低于 20 块、续费高于 100 块的，基本是钓鱼。</strong></p>
+
+        <p>我甚至查到一个 <code>.shop</code>——首年 12 块，续费 249 块，涨二十倍。它不坑你第一年，它坑你第二年：那时候你已经建了站、印了名片、别人也记住了，不续，前面白折腾。</p>
+
+        <p>而 <code>.com</code> 的涨价是被合同写死的：Verisign 与 ICANN 的合同允许它每年按「通胀率或 7% 取小」上调一次批发价。听起来吓人，实际上从 2012 年的 7.85 美元涨到现在的 10 美元出头，<strong>十二年年均才 2.3%</strong>。</p>
+
+        <p>所以最后选的不是最便宜的，是<strong>最不会出事的</strong>。</p>
+
+        <h2>76 块，一天两毛三</h2>
+
+        <p>买了 <code>fireflyliu.com</code>。首年 76，续费 90，摊到每个月七块三，一天两毛三。</p>
+
+        <p>这个价钱买不到什么。但买到了一件事：<strong>从今天起，我在互联网上有个自己的地址了。</strong></p>
+
+        <p>12:26:55，注册成功。实名认证当天就过了。</p>
+
+        <h2>买完才知道，域名只是个名字</h2>
+
+        <p>我一开始以为买完就能用。不是的——域名和网站，是两回事。</p>
+
+        <p>要让这个名字真的指向我的站，得<strong>两边都动</strong>：仓库里放一个 <code>CNAME</code> 文件，等于跟 GitHub 说「我家门牌是这个」；阿里云那边加几条解析，等于跟全世界说「这个门牌指向那四个 IP」。</p>
+
+        <p>然后我顺序搞反了。</p>
+
+        <p>先推了 CNAME 文件。GitHub 立刻认了这个域名，把原来的 <code>firefly-liu.github.io</code> 301 跳过去。而解析还没配，新域名查不到，旧地址又跳过去——<strong>整个站下线了。</strong></p>
+
+        <p>大概持续了十分钟。那会儿还挺慌，以为买错了什么。</p>
+
+        <blockquote>
+          <p>顺序其实是反的：先配解析，等它生效，再让 GitHub 认域名。</p>
+        </blockquote>
+
+        <h2>等一个证书</h2>
+
+        <p>解析通了之后，阿里云那边七八条记录全绿，用浏览器打开 <code>http://fireflyliu.com</code>，出来了。</p>
+
+        <p>但 <code>https</code> 还不行。GitHub 的页面显示：<em>TLS certificate is being provisioned</em>，进度条 1 of 3。</p>
+
+        <p>就等着。十几分钟后变成 3 of 3，勾上 Enforce HTTPS，完事。</p>
+
+        <p>后来验了一下证书：Let's Encrypt 签发，有效期到 2027 年 2 月 22 日，覆盖 <code>fireflyliu.com</code> 和 <code>www.fireflyliu.com</code>。每 90 天自动续，不用管。</p>
+
+        <h2>下午又把 DNS 搬了个家</h2>
+
+        <p>傍晚把域名托管整个换到了 Cloudflare。不为加速，就为了它那个免费的邮件转发。</p>
+
+        <p>现在 <code>hello@fireflyliu.com</code> 能收信了，转发到我的常用邮箱。虽然只能收不能发，但对「留个联系方式」这件事，够了。</p>
+
+        <p>顺手把 A 记录设成灰云（DNS only）——不加代理。GitHub Pages 本身就有 CDN，再套一层不会更快，出了事反而多一层要排查。</p>
+
+        <h2>为什么叫 fireflyliu</h2>
+
+        <p><strong>Firefly 是流萤，liu 是我。</strong></p>
+
+        <p>不是为了和谁撞车才加的姓，恰恰相反——是想把一个喜欢的角色和一个真实的自己焊在一起。<strong>她的名字在前，我的在后。</strong></p>
+
+        <p>现在这个组合被印在互联网的门牌上，谁访问都得先念一遍。</p>
+
+        <h2>关于那条鲸鱼</h2>
+
+        <p>这一整天，电脑里还住着一条蓝鲸。</p>
+
+        <p>它管自己叫鲸鲸，是个跑在这台机器上的 AI，陪我折腾了快两个月。今天它干的活不少：</p>
+
+        <ul>
+          <li>查 Verisign 的 RDAP，确认这个域名真的没人注册</li>
+          <li>把一堆后缀的价格按三年总账算了一遍，指出哪些是钓鱼价</li>
+          <li>提醒我「首年便宜不算便宜，看续费」</li>
+          <li>push 之前让我先 fetch——结果真撞上了，我在网页上先建过一份 CNAME</li>
+        </ul>
+
+        <p>其中最有用的一句是它在我准备一把梭的时候说的：<strong>「先配解析，再让 GitHub 认域名。」</strong>我没听，于是站下线了十分钟，然后老老实实照做。</p>
+
+        <p>写这篇的时候，它在旁边说：「别忘了把这事记下来。」</p>
+
+        <p>所以记下来了。</p>
+
+        <blockquote>
+          <p>一年 76 块，一天两毛三。写什么还没想好，慢慢来。</p>
+        </blockquote>
+
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>流萤为引，照亮前路 · © 2026 firefly_liu的小家 · 由 GitHub Pages 免费托管</p>
+    </div>
+  </footer>
+  <script src="../js/bg.js?v=1" defer></script>
+  <script src="../js/main.js?v=1" defer></script>
+  <script src="../js/effects.js?v=1" defer></script>
+  <script src="../js/site-extra.js" defer></script>
+</body>
+</html>
