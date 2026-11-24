@@ -2010,3 +2010,15 @@ kbd {
 
 /* new badge */
 .new-badge{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:rgba(var(--firefly-green),.85);color:#2c3a22;font-size:11px;font-weight:700;letter-spacing:.06em;vertical-align:middle}
+
+/* site stats */
+.site-stats{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:24px;font-size:12.5px;color:var(--text-light);letter-spacing:.03em}
+.site-stats span{position:relative;display:inline-block}
+.site-stats span+span{padding-left:15px}
+.site-stats span+span::before{content:"";position:absolute;left:0;top:50%;width:4px;height:4px;margin-top:-2px;border-radius:50%;background:rgba(var(--firefly-green),1)}
+/* reveal on scroll */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal.is-in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+/* header scrolled */
+.site-header.is-scrolled{box-shadow:0 8px 26px -20px rgba(0,0,0,.45)}
