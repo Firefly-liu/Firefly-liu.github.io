@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://fireflyliu.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://fireflyliu.com/intro.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fireflyliu.com/ros.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://fireflyliu.com/files.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://fireflyliu.com/about.html</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://fireflyliu.com/articles/welcome.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/static-blog.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/kcb-app.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/ros-env.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/ros-vision.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/ros-nav.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/ros-ocr.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/ros-voice.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/ros-competition.html</loc><changefreq>yearly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fireflyliu.com/articles/study-notes.html</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+</urlset>
