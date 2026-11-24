@@ -1,6 +1,6 @@
-/* ============================================================
+ /* ============================================================
    firefly_liu的小家 · 细节增强
-   功能：滚动渐显 / 站点统计 / 头部滚动状态
+   功能：滚动渐显 / 站点统计 / 头部滚动状态 / 文章页返回键
    说明：纯增强，删掉它页面照常可用。
    ============================================================ */
 (function () {
@@ -52,5 +52,15 @@
       },
       { passive: true }
     );
+  }
+
+  /* ---------- 4. 文章页返回键 ---------- */
+  if (/\/articles\//.test(location.pathname)) {
+    var back = document.createElement("a");
+    back.className = "back-home";
+    back.href = "../index.html#blog";
+    back.title = "返回文章列表";
+    back.innerHTML = "<span>←</span> 返回";
+    document.body.appendChild(back);
   }
 })();
