@@ -2022,3 +2022,9 @@ kbd {
 @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 /* header scrolled */
 .site-header.is-scrolled{box-shadow:0 8px 26px -20px rgba(0,0,0,.45)}
+
+/* whale page */
+.whale-figure{margin:36px 0;text-align:center}
+.whale-figure img{max-width:100%;height:auto;border-radius:var(--radius);box-shadow:0 16px 44px -28px rgba(0,0,0,.5)}
+.whale-figure img.portrait{max-width:min(380px,78%)}
+.whale-figure figcaption{margin-top:14px;font-size:13px;color:var(--text-light)}
