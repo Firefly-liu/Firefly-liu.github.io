@@ -188,31 +188,15 @@
   window.addEventListener("resize", updateProgress);
   updateProgress();
 
-  // 图片灯箱：点击文章图片放大查看
+  // 图片点击：新标签打开原图（可右键另存）；表情图不响应
   document.addEventListener("click", function (e) {
     var img = e.target && e.target.closest ? e.target.closest(".article-body img") : null;
     if (!img) return;
+    if (img.closest(".emote-item")) return;
     e.preventDefault();
-    var lb = document.createElement("div");
-    lb.className = "lightbox";
-    var big = document.createElement("img");
-    big.src = img.currentSrc || img.src;
-    big.alt = img.alt || "";
-    lb.appendChild(big);
-    document.body.appendChild(lb);
-    function close() {
-      lb.classList.add("out");
-      setTimeout(function () {
-        if (lb.parentNode) lb.parentNode.removeChild(lb);
-      }, 250);
-    }
-    lb.addEventListener("click", close);
-    document.addEventListener("keydown", function esc(e) {
-      if (e.key === "Escape") {
-        close();
-        document.removeEventListener("keydown", esc);
-      }
-    });
+    var url = img.currentSrc || img.src;
+    if (!url) return;
+    window.open(url, "_blank", "noopener");
   }, true);
 
   // 页脚：运行天数
