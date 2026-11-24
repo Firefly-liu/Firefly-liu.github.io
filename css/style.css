@@ -1,3 +1,10 @@
+@font-face{
+  font-family:"Yozai";
+  src:url("../fonts/yozai-medium.woff2") format("woff2");
+  font-weight:400 600;
+  font-style:normal;
+  font-display:swap;
+}
 /* ===== Firefly-liu的博客 · 全站样式 ===== */
 
 :root {
@@ -15,7 +22,7 @@
   --theme-tint: 255, 218, 231; /* 主页主题色（淡粉）：改这里，顶部遮罩、欢迎区、文章卡片一起变 */
   --night: 0.55;                  /* 背景暗化程度：0 = 不变暗，1 = 全黑 */
   --night-content: calc(var(--night) / 2); /* 前景卡片暗化程度：自动为背景的一半 */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+  --font-sans: "Yozai", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -108,7 +115,7 @@ a:focus-visible,
 }
 
 .container {
-  max-width: 760px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 0 24px;
   position: relative;
