@@ -67,7 +67,7 @@
   if (window.matchMedia("(min-width: 1400px)").matches) {
     var prefix = /\/articles\//.test(location.pathname) ? "../" : "";
     var rail = document.createElement("aside");
-    rail.className = "side-rail";
+    rail.className = "site-rail";
     rail.innerHTML = [
       '<div class="rail-card">',
       '  <div class="rail-title">关于</div>',
