@@ -54,12 +54,15 @@
     );
   }
 
-  /* ---------- 4. 文章页返回键 ---------- */
-  if (/\/articles\//.test(location.pathname)) {
+  /* ---------- 4. 返回键（首页以外都显示） ---------- */
+  var path = location.pathname;
+  var isHome = /(^|\/)index\.html$/.test(path) || /\/$/.test(path);
+  if (!isHome) {
+    var inArticles = /\/articles\//.test(path);
     var back = document.createElement("a");
     back.className = "back-home";
-    back.href = "../index.html#blog";
-    back.title = "返回文章列表";
+    back.href = inArticles ? "../index.html#blog" : "index.html";
+    back.title = inArticles ? "返回文章列表" : "返回首页";
     back.innerHTML = "<span>←</span> 返回";
     document.body.appendChild(back);
   }
